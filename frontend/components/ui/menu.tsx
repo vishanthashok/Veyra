@@ -12,7 +12,7 @@ export function MenuContent({ className, align = "end", ...p }: React.ComponentP
       <M.Content
         align={align}
         sideOffset={6}
-        className={cn("anim-pop z-[var(--z-popover)] min-w-44 rounded-md border border-line bg-surface p-1 shadow-pop", className)}
+        className={cn("anim-pop z-[var(--z-popover)] min-w-48 rounded-[10px] border border-line bg-surface p-1 shadow-pop", className)}
         {...p}
       />
     </M.Portal>
@@ -23,7 +23,7 @@ export function MenuItem({ className, ...p }: React.ComponentProps<typeof M.Item
   return (
     <M.Item
       className={cn(
-        "flex cursor-default select-none items-center gap-2 rounded-[var(--radius-sm)] px-2 py-1.5 text-sm text-ink outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-surface-3 [&_svg]:size-4 [&_svg]:text-muted",
+        "flex h-8 cursor-default select-none items-center gap-2 rounded-[6px] px-2 text-sm text-ink outline-none data-[disabled]:opacity-50 data-[highlighted]:bg-surface-2 [&_svg]:size-4 [&_svg]:text-muted",
         className,
       )}
       {...p}
@@ -35,7 +35,7 @@ export function MenuCheckboxItem({ className, children, ...p }: React.ComponentP
   return (
     <M.CheckboxItem
       className={cn(
-        "flex cursor-default select-none items-center gap-2 rounded-[var(--radius-sm)] px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-surface-3",
+        "flex h-8 cursor-default select-none items-center gap-2 rounded-[6px] px-2 text-sm outline-none data-[highlighted]:bg-surface-2",
         className,
       )}
       {...p}
@@ -51,6 +51,6 @@ export function MenuCheckboxItem({ className, children, ...p }: React.ComponentP
 }
 
 export const MenuLabel = ({ className, ...p }: React.ComponentProps<typeof M.Label>) => (
-  <M.Label className={cn("px-2 py-1 text-2xs font-semibold uppercase tracking-wide text-muted", className)} {...p} />
+  <M.Label className={cn("px-2 pb-1 pt-1.5 text-2xs font-medium text-muted", className)} {...p} />
 );
-export const MenuSeparator = () => <M.Separator className="my-1 h-px bg-line" />;
+export const MenuSeparator = () => <M.Separator className="-mx-1 my-1 h-px bg-line" />;

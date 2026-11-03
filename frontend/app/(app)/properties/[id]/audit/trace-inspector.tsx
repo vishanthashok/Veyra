@@ -18,6 +18,16 @@ function short(v: string | null | undefined) {
   return f.length > 6 ? `${i}.${f.slice(0, 6)}…` : v;
 }
 
+const PHASE: Record<string, [string, string]> = {
+  source: ["Source data", "bg-[#8f96a3]"],
+  rule: ["Approved rule", "bg-accent"],
+  calc: ["Calculation", "bg-[#3d8b7d]"],
+  billed: ["Billing", "bg-info"],
+  diff: ["Difference", "bg-[#c27a1e]"],
+};
+const FIRST_OF_PHASE = new Set([1, 4, 6, 10, 11]);
+
+/** One step on the calculation rail: number, title, content; phase label where a phase starts. */
 function Section({
   n,
   title,
@@ -29,17 +39,24 @@ function Section({
   children: React.ReactNode;
   tone?: "source" | "rule" | "calc" | "billed" | "diff";
 }) {
-  const bar = { source: "bg-[#9aa7bb]", rule: "bg-accent", calc: "bg-[#0e9384]", billed: "bg-[#6172f3]", diff: "bg-[#dc6803]" }[
-    tone ?? "calc"
-  ];
+  const [phase, dot] = PHASE[tone ?? "calc"];
   return (
-    <section className="relative rounded-lg border border-line bg-surface p-4 pl-5 shadow-xs">
-      <span className={cn("absolute inset-y-3 left-0 w-1 rounded-r", bar)} aria-hidden />
-      <h3 className="mb-2.5 flex items-center gap-2 text-sm font-semibold text-ink">
-        <span className="flex size-5 items-center justify-center rounded-full bg-surface-3 text-2xs font-semibold text-ink-2">{n}</span>
-        {title}
-      </h3>
-      {children}
+    <section className="relative pl-9">
+      <span className="absolute bottom-0 left-[11px] top-7 w-px bg-line" aria-hidden />
+      {FIRST_OF_PHASE.has(n) && (
+        <div className="mb-2 flex items-center gap-1.5 text-2xs font-medium uppercase tracking-[0.06em] text-muted">
+          <span className={cn("size-1.5 rounded-full", dot)} aria-hidden />
+          {phase}
+        </div>
+      )}
+      <span
+        className="absolute left-0 flex size-6 items-center justify-center rounded-full border border-line-strong bg-surface text-2xs font-semibold tabular text-ink-2"
+        style={{ top: FIRST_OF_PHASE.has(n) ? 24 : 0 }}
+      >
+        {n}
+      </span>
+      <h3 className="mb-2 pt-0.5 text-sm font-semibold text-ink">{title}</h3>
+      <div className="pb-6">{children}</div>
     </section>
   );
 }
@@ -56,13 +73,12 @@ export function TraceInspector({ result, onClose, periodLabel }: { result: Resul
     <Dialog open={!!result} onOpenChange={(o) => !o && onClose()}>
       {result && (
         <SheetContent
-          title={
+          eyebrow={
             <span className="flex items-center gap-2">
-              {result.suite && <span className="text-muted">Suite {result.suite}</span>}
-              {result.tenant_name}
-              <StatusBadge status={result.status} />
+              {result.suite ? `Suite ${result.suite} · ` : ""}Calculation trace <StatusBadge status={result.status} />
             </span>
           }
+          title={result.tenant_name}
           description={
             <>
               Calculation inspector · {periodLabel} · engine {t?.engine_version ?? "…"} · input {t?.input_hash.slice(0, 12) ?? "…"}
@@ -72,24 +88,61 @@ export function TraceInspector({ result, onClose, periodLabel }: { result: Resul
           {!t ? (
             <TableSkeleton rows={8} />
           ) : (
-            <div className="space-y-3">
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-2xs text-muted" aria-label="Legend">
-                {[
-                  ["bg-[#9aa7bb]", "Source data"],
-                  ["bg-accent", "Approved rule"],
-                  ["bg-[#0e9384]", "Calculated"],
-                  ["bg-[#6172f3]", "Billed"],
-                  ["bg-[#dc6803]", "Difference"],
-                ].map(([c, l]) => (
-                  <span key={l} className="flex items-center gap-1.5">
-                    <span className={cn("h-2.5 w-1 rounded", c)} aria-hidden />
-                    {l}
-                  </span>
-                ))}
-              </div>
+            <div>
+              {result.status === "calculated" && (
+                <div className="mb-6 rounded-[var(--radius-lg)] bg-surface-2 p-4">
+                  <div className="text-xs text-muted">Provisional year-to-date share</div>
+                  <div className="mt-1 text-2xl font-semibold tabular-nums tracking-[-0.02em] text-ink">{money(result.total)}</div>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-ink-2 tabular">
+                    {result.lines.map((l, i) => (
+                      <React.Fragment key={l.pool}>
+                        {i > 0 && <span className="text-subtle">+</span>}
+                        <span>
+                          <span className="text-muted">{l.pool}</span> {money(l.amount)}
+                        </span>
+                      </React.Fragment>
+                    ))}
+                    {sign(result.admin_fee) !== 0 && (
+                      <>
+                        <span className="text-subtle">+</span>
+                        <span>
+                          <span className="text-muted">Admin fee</span> {money(result.admin_fee)}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {result.variance !== null && (
+                    <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 border-t border-line pt-3 text-xs">
+                      <span>
+                        <span className="text-muted">Billed in window </span>
+                        <span className="tabular font-medium">{money(result.billed)}</span>
+                      </span>
+                      <span>
+                        <span className="text-muted">Variance </span>
+                        <span
+                          className={cn(
+                            "tabular font-medium",
+                            sign(result.variance) > 0 && "text-under",
+                            sign(result.variance) < 0 && "text-over",
+                          )}
+                        >
+                          {money(result.variance)}
+                        </span>{" "}
+                        <span className="text-muted">
+                          {sign(result.variance) > 0
+                            ? "billed less than share"
+                            : sign(result.variance) < 0
+                              ? "billed more than share"
+                              : "matches"}
+                        </span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {result.status === "unresolved" && (
-                <div role="alert" className="rounded-md border border-error-line bg-error-bg px-3 py-2 text-sm text-error">
+                <div role="alert" className="mb-6 rounded-[var(--radius-md)] bg-error-bg px-3 py-2.5 text-sm text-error">
                   <b>No amount calculated.</b> {result.unresolved_reasons.join(" ")}
                 </div>
               )}
