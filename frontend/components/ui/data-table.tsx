@@ -209,7 +209,7 @@ export function DataTable<T>({
           ) : (
             <>
               {filterStart}
-              <div className="relative w-full max-w-64 sm:w-64">
+              <div className="relative min-w-0 flex-1 sm:max-w-64">
                 <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-subtle" aria-hidden />
                 <input
                   value={globalFilter}

@@ -3,6 +3,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Plus, Trash2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useApp } from "@/components/app/app-context";
 import { ConfirmDialog } from "@/components/app/note-dialog";
 import { EmptyState, ErrorBox, PageHeader } from "@/components/app/page";
 import { Badge, StatusBadge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { Panel } from "@/components/ui/panel";
 import { api, errorText, type LeaseRule, type Tenant } from "@/lib/api";
 import { useLoad } from "@/lib/hooks";
 import { fmtDate } from "@/lib/utils";
+import { SetupTabs } from "../setup-tabs";
 import { crumbs, useProperty } from "../context";
 
 const blank = { name: "", suite: "", rentable_area: "", lease_start: "", lease_end: "", allocation_method: "pro_rata", lease_rule_id: "" };
@@ -22,6 +24,7 @@ type Form = typeof blank;
 export default function Tenants() {
   const ctx = useProperty();
   const pid = ctx.property.id;
+  const { readiness } = useApp();
   const t = useLoad(() => api.get<Tenant[]>(`/properties/${pid}/tenants`), [pid]);
   const rules = useLoad(() => api.get<LeaseRule[]>(`/properties/${pid}/lease-rules`), [pid]);
   const ruleById = useMemo(() => Object.fromEntries((rules.data ?? []).map((r) => [r.id, r])), [rules.data]);
@@ -120,7 +123,7 @@ export default function Tenants() {
   return (
     <>
       <PageHeader
-        title="Tenants"
+        title={ctx.property.name}
         crumbs={crumbs(ctx, "Tenants")}
         description="Rentable area and lease dates drive allocation and proration. Calculations use the approved lease rule."
         actions={
@@ -130,6 +133,7 @@ export default function Tenants() {
           </Button>
         }
       />
+      <SetupTabs base={ctx.base} tenants={readiness[pid]?.tenants} />
       <ErrorBox error={t.error} />
       <Panel>
         {t.data && t.data.length === 0 ? (
