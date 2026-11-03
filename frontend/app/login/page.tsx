@@ -1,4 +1,5 @@
 "use client";
+import { BrandLogo } from "@/components/brand-logo";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { ErrorBox } from "@/components/app/page";
@@ -54,12 +55,7 @@ export default function LoginPage() {
   return (
     <main className="grid min-h-screen lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <section className="hidden flex-col justify-between bg-nav p-12 text-nav-ink lg:flex">
-        <div className="flex items-center gap-2.5">
-          <span className="flex size-7 items-center justify-center rounded-[7px] bg-[#e8f3f0] text-sm font-bold text-[#0d7a6a]" aria-hidden>
-            V
-          </span>
-          <span className="text-lg font-semibold tracking-[-0.01em] text-white">Veyra</span>
-        </div>
+        <BrandLogo theme="dark" size={44} className="-ml-[6px]" />
         <div className="max-w-md">
           <p className="text-2xl font-semibold leading-[1.25] tracking-[-0.02em] text-white">
             Every expense accounted for. Every recovery explained.
@@ -80,12 +76,7 @@ export default function LoginPage() {
       </section>
       <section className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-[360px]">
-          <div className="mb-8 flex items-center gap-2.5 lg:hidden">
-            <span className="flex size-7 items-center justify-center rounded-[7px] bg-nav text-sm font-bold text-white" aria-hidden>
-              V
-            </span>
-            <span className="text-lg font-semibold">Veyra</span>
-          </div>
+          <BrandLogo theme="light" size={40} className="mb-8 -ml-[5px] lg:hidden" />
           <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink">Sign in</h1>
           <p className="mb-7 mt-1 text-sm text-muted">Use your Veyra work account.</p>
           <Suspense>

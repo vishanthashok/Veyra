@@ -6,7 +6,7 @@ The critique that drove this version is in [UI_CRITIQUE.md](UI_CRITIQUE.md).
 
 ## Direction
 
-Financial operations software in the style of Linear, Stripe, Ramp and Mercury. Warm off-white page, white panels, charcoal navigation, one refined teal accent. Tables and queues are the main surface. Every screen answers one question: what needs attention next. No gradients, glass, oversized cards or decorative charts. Motion only confirms a state change.
+Financial operations software in the style of Linear, Stripe, Ramp and Mercury. Warm off-white page, white panels, charcoal navigation, one refined teal accent taken from the logo. Logo assets and usage rules are in `frontend/public/brand/README.md`. Tables and queues are the main surface. Every screen answers one question: what needs attention next. No gradients, glass, oversized cards or decorative charts. Motion only confirms a state change.
 
 ## Tokens
 
@@ -23,7 +23,7 @@ Financial operations software in the style of Linear, Stripe, Ramp and Mercury. 
 | `--muted` | `#676c75` | Labels, captions | 5.3 / 5.1 |
 | `--subtle` | `#9a9ea6` | Icons and placeholders only | decorative |
 | `--nav` / `-2` / `-3` | `#121417` / `#1b1e23` / `#252930` | Sidebar, hover, active item | `--nav-ink` 15.6, `--nav-muted` 6.2 |
-| `--accent` | `#0d7a6a` | Primary actions, focus, selection | 5.2 / 5.0 |
+| `--accent` | `#137f73` | Primary actions, focus, selection (brand teal) | 4.9 / 4.7 |
 | `--accent-soft` | `#e8f3f0` | Selected row, featured icon tile | n/a |
 | `--error` | `#b3261e` | Blocking errors | 6.5 |
 | `--warning` | `#93560f` | Needs review | 5.9 |

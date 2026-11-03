@@ -1,4 +1,5 @@
 "use client";
+import { BrandLogo } from "@/components/brand-logo";
 import {
   Building2,
   Check,
@@ -193,13 +194,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className="flex items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[#5fb3a6]/60"
                 aria-label="Veyra home"
               >
-                <span
-                  className="flex size-6 items-center justify-center rounded-[6px] bg-[#e8f3f0] text-[13px] font-bold text-[#0d7a6a]"
-                  aria-hidden
-                >
-                  V
-                </span>
-                {!narrow && <span className="text-[15px] font-semibold tracking-[-0.01em] text-white">Veyra</span>}
+                <BrandLogo theme="dark" collapsed={narrow} size={32} label={false} />
               </Link>
               {mobileOpen && (
                 <button
