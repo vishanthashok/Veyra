@@ -80,7 +80,11 @@ export function Segmented<T extends string>({
   className?: string;
 }) {
   return (
-    <div role="tablist" aria-label={label} className={cn("scroll-quiet inline-flex max-w-full overflow-x-auto rounded-[var(--radius-md)] bg-surface-3 p-0.5", className)}>
+    <div
+      role="tablist"
+      aria-label={label}
+      className={cn("scroll-quiet inline-flex max-w-full overflow-x-auto rounded-[var(--radius-md)] bg-surface-3 p-0.5", className)}
+    >
       {options.map((o) => (
         <button
           key={o.value}

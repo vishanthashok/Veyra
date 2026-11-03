@@ -11,17 +11,18 @@ The rule: tests check behavior against independent expectations, not mocked resp
 | Engine property | Hypothesis | same file | 150 examples | Invariants hold for random portfolios with credits, unmapped and out-of-period rows |
 | API integration | pytest + TestClient + real Postgres | `backend/tests/api/test_api.py` | 8 | Demo end to end vs independent expected values, uploads, mappings, rule locking, isolation |
 | Regressions | same | `backend/tests/api/test_regressions_v02.py` | 11 | Each audit finding F-01 to F-10, written to fail on v0.1 first |
-| v0.2 features | same | `backend/tests/api/test_v02_features.py` | 15 | Reproducibility after data changes, atomic import with injected failure, dry run, error CSV, idempotency, bulk mapping, exception lifecycle, isolation across 13 endpoints, readiness, config guard, demo figures unchanged |
+| v0.2 features | same | `backend/tests/api/test_v02_features.py` | 17 | Activity feed built from real records, dashboard period and exception types, reproducibility after data changes, atomic import with injected failure, dry run, error CSV, idempotency, bulk mapping, exception lifecycle, isolation across 13 endpoints, readiness, config guard, demo figures unchanged |
 | Migrations | Alembic | CI | n/a | `upgrade head`, `downgrade base`, `upgrade head`, `alembic check` (models match migrations) |
 | Frontend unit | Vitest | `frontend/tests/format.test.ts` | 9 | Money, percent, sign, decimal compare and subtraction without floats |
 | Frontend component | Vitest + Testing Library | `frontend/tests/data-table.test.tsx`, `note-dialog.test.tsx` | 8 | Numeric sort, filters, selection and bulk actions, keyboard rows, note validation, error display, text labels |
-| End to end | Playwright | `frontend/e2e/workflow.spec.ts` | 3 | New property from import to verified audit with hand-computed figures; blocking errors cannot be resolved by hand; skip link and command palette |
-| Visual | Playwright | `frontend/e2e/screenshots.spec.ts` | 1 | Captures `docs/screenshots`; asserts no horizontal overflow at 390 px |
+| Overview logic | Vitest + Testing Library | `frontend/tests/overview.test.tsx` | 7 | Action ranking and dedupe, next-step choice, ActionList links, activity grouping, metric strip |
+| End to end | Playwright | `frontend/e2e/workflow.spec.ts`, `overview.spec.ts` | 6 | Action center links to the fix; sidebar groups, active state and collapse; mobile drawer without overflow; New property from import to verified audit with hand-computed figures; blocking errors cannot be resolved by hand; skip link and command palette |
+| Visual | Playwright | `frontend/e2e/screenshots.spec.ts` | 1 | Captures `docs/screenshots`; desktop screens plus overview, audit and exceptions at 1280, 768 and 390 px; asserts no horizontal page overflow |
 | Static | ruff, mypy --strict (engine), ESLint, tsc strict, Prettier | CI | n/a | Lint, types, formatting |
 | Dependencies | pip-audit, pnpm audit | CI (report-only) | n/a | Known vulnerabilities |
 | Performance | `backend/scripts/bench.py` | manual | n/a | Engine, import, run and report timings at 20,000 to 50,000 rows |
 
-Totals at the time of writing: 81 backend, 17 frontend unit/component, 3 end-to-end.
+Totals at the time of writing: 83 backend, 24 frontend unit/component, 6 end-to-end.
 
 ## Running
 
