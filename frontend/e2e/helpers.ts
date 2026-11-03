@@ -7,5 +7,5 @@ export async function signIn(page: Page) {
   await page.getByLabel("Work email").fill(DEMO.email);
   await page.getByLabel("Password").fill(DEMO.password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Overview", level: 1 })).toBeVisible();
 }

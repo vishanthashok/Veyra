@@ -46,7 +46,6 @@ test("new property from import to reviewed audit", async ({ page }) => {
 
   // GL import through the wizard: 10,000.00 landscaping plus one invalid row.
   await page.goto(`${base}/import`);
-  await page.getByRole("button", { name: "Continue" }).click();
   await page.locator('input[type="file"]').setInputFiles({
     name: "gl.csv",
     mimeType: "text/csv",
@@ -59,6 +58,7 @@ test("new property from import to reviewed audit", async ({ page }) => {
   await expect(page.getByText("Will be imported")).toBeVisible();
   await expect(page.getByRole("cell", { name: /Unrecognized date/ })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue to confirm" }).click();
   await page.getByRole("button", { name: "Import 2 rows" }).click();
   await expect(page.getByText("Import committed")).toBeVisible();
 
@@ -92,13 +92,13 @@ test("new property from import to reviewed audit", async ({ page }) => {
 
   // Billings: 9 x 200 = 1,800.
   await page.goto(`${base}/import`);
-  await page.getByLabel("Tenant CAM billings").check();
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("tab", { name: "Tenant billings" }).click();
   const bill = ["Tenant,Bill Date,Amount", ...Array.from({ length: 9 }, (_, i) => `101,2026-0${i + 1}-01,200.00`)].join("\n");
   await page.locator('input[type="file"]').setInputFiles({ name: "billings.csv", mimeType: "text/csv", buffer: Buffer.from(bill) });
   await page.getByRole("button", { name: "Upload and preview" }).click();
   await page.getByRole("button", { name: "Validate rows" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue to confirm" }).click();
   await page.getByRole("button", { name: "Import 9 rows" }).click();
   await expect(page.getByText("Import committed")).toBeVisible();
 
@@ -126,25 +126,28 @@ test("new property from import to reviewed audit", async ({ page }) => {
 
 test("blocking errors can be accepted with a note but not resolved by hand", async ({ page }) => {
   await signIn(page);
-  await page.getByRole("link", { name: "Mesquite Crossing (Synthetic)" }).first().click();
-  await expect(page.getByText("Audit readiness")).toBeVisible();
-  const base = page.url();
+  const props: { id: string; name: string }[] = await page.evaluate(() => fetch("/api/v1/properties").then((r) => r.json()));
+  const base = `/properties/${props.find((p) => p.name === "Mesquite Crossing (Synthetic)")!.id}`;
   // A fresh run gives a fresh queue, so the test does not depend on earlier decisions.
   await page.goto(`${base}/audit`);
   await page.getByRole("button", { name: "Run audit" }).click();
   await expect(page.getByText(/Audit complete/)).toBeVisible();
   await page.goto(`${base}/exceptions`);
-  await page.getByRole("row", { name: /MISSING_LEASE_RULE/ }).click();
-  const sheet = page.getByRole("dialog");
-  await expect(sheet.getByText("cannot be marked resolved by hand")).toBeVisible();
-  await expect(sheet.getByRole("button", { name: "Resolve" })).toHaveCount(0);
-  await sheet.getByRole("button", { name: "Accept exception" }).click();
+  await page.getByRole("button", { name: /Missing lease rule/ }).click();
+  const detail = page.getByRole("main");
+  await expect(detail.getByText("cannot be marked resolved by hand")).toBeVisible();
+  await expect(detail.getByRole("button", { name: "Resolve", exact: true })).toHaveCount(0);
+  await detail.getByRole("button", { name: "Accept exception" }).click();
   const note = page.getByRole("dialog", { name: "Accept exception" });
   await note.getByRole("button", { name: "Accept exception" }).click();
   await expect(note.getByRole("alert")).toContainText("Write at least a few words");
   await note.getByLabel(/Reviewer note/).fill("Tenant vacates Oct 31; owner excludes from 2026 pre-close review");
   await note.getByRole("button", { name: "Accept exception" }).click();
-  await expect(sheet.getByText("Tenant vacates Oct 31")).toHaveCount(2); // latest note + history
+  // Accepted items leave the action queue but stay on the record.
+  await page.getByRole("tab", { name: /Closed/ }).click();
+  await page.getByRole("button", { name: /Missing lease rule/ }).click();
+  await expect(detail.getByText("Tenant vacates Oct 31").first()).toBeVisible();
+  await expect(detail.getByRole("button", { name: "Reopen" })).toBeVisible();
 });
 
 test("keyboard: skip link and command palette", async ({ page }) => {

@@ -44,7 +44,7 @@ export function MetricStrip({ metrics, className }: { metrics: Metric[]; classNa
       style={{ ["--n" as string]: metrics.length }}
     >
       {metrics.map((m) => (
-        <Cell key={m.label} m={m} className="bg-surface" />
+        <Cell key={m.label} m={m} className="bg-surface max-lg:last:odd:col-span-2" />
       ))}
     </div>
   );
