@@ -1,0 +1,11 @@
+.claude-flow/
+.env
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+node_modules/
+.next/
+backend/storage/
+*.log
+.pgdata/
