@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from openpyxl import Workbook
-from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.styles import Alignment, Border, Font, NamedStyle, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 from sqlalchemy import select
@@ -114,18 +114,27 @@ def _sheet(wb: Workbook, title: str, ctx: dict, headers: list[str], widths: list
     return ws
 
 
+def _register_styles(wb: Workbook) -> None:
+    """Named styles are created once per workbook. Assigning a style per cell by name is cheap;
+    building Border/number-format objects per cell made a 20,000-row export take about 20 s."""
+    if "veyra_money" in wb.named_styles:
+        return
+    wb.add_named_style(NamedStyle(name="veyra_money", number_format=MONEY))
+    wb.add_named_style(NamedStyle(name="veyra_pct", number_format=PCT))
+
+
 def _write(ws: Worksheet, rows: list[list], money: set[int] = frozenset(), pct: set[int] = frozenset()) -> int:
+    _register_styles(ws.parent)
     r = HEADER_ROW
     for r, row in enumerate(rows, HEADER_ROW + 1):
         for c, v in enumerate(row, 1):
-            if c in money | pct and isinstance(v, str) and v not in ("", None):
-                v = Decimal(v)
-            cell = ws.cell(row=r, column=c, value=v)
-            cell.border = Border(bottom=THIN)
-            if c in money:
-                cell.number_format = MONEY
-            elif c in pct:
-                cell.number_format = PCT
+            if c in money or c in pct:
+                if isinstance(v, str) and v != "":
+                    v = Decimal(v)
+                cell = ws.cell(row=r, column=c, value=v)
+                cell.style = "veyra_money" if c in money else "veyra_pct"
+            else:
+                ws.cell(row=r, column=c, value=v)
     if rows:
         ws.auto_filter.ref = f"A{HEADER_ROW}:{get_column_letter(ws.max_column)}{r}"
     return r
@@ -145,10 +154,13 @@ def _total_row(ws: Worksheet, last: int, label_col: int, cols: list[int]) -> Non
 
 
 def _excluded_reason(tid: str, ctx) -> str:
-    for reason, ids in (ctx["run"].summary.get("excluded") or {}).items():
-        if tid in ids:
-            return reason.replace("_", " ")
-    return ""
+    if "_excluded_by_id" not in ctx:
+        ctx["_excluded_by_id"] = {
+            i: reason.replace("_", " ")
+            for reason, ids in (ctx["run"].summary.get("excluded") or {}).items()
+            for i in ids
+        }
+    return ctx["_excluded_by_id"].get(tid, "")
 
 
 # Sheets ---------------------------------------------------------------------------------------

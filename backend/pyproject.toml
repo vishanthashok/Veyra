@@ -46,6 +46,7 @@ ignore = ["B008", "S101", "SIM108", "RUF001", "RUF002", "RUF003", "UP040", "UP04
 "tests/**" = ["S", "E501", "E402", "B", "SIM", "RUF059"]
 "app/demo_seed.py" = ["S"]
 "alembic/env.py" = ["E402"]
+"scripts/**" = ["S", "E501"]
 
 [tool.mypy]
 python_version = "3.13"

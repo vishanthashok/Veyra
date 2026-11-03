@@ -125,6 +125,11 @@ def suggest_map(kind: str, columns: list[str]) -> dict[str, str]:
 
 def parse_date(v: str) -> date:
     v = v.strip()
+    if len(v) == 10 and v[4] == "-":
+        try:
+            return date.fromisoformat(v)
+        except ValueError:
+            pass
     for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y", "%Y/%m/%d"):
         try:
             return datetime.strptime(v, fmt).date()
@@ -152,9 +157,11 @@ def validate_rows(kind: str, df: pd.DataFrame, column_map: dict[str, str]):
     missing = [f for f in req if f not in column_map or column_map[f] not in df.columns]
     if missing:
         raise ImportError_(f"Required fields are not mapped to a column: {', '.join(missing)}")
-    for idx, (_, row) in enumerate(df.iterrows()):
+    mapped = [(f, c) for f, c in column_map.items() if c in df.columns]
+    # Plain dicts: about 10x faster than DataFrame.iterrows for large ledgers.
+    for idx, row in enumerate(df.to_dict(orient="records")):
         source_row = idx + 2
-        raw = {f: str(row[c]).strip() for f, c in column_map.items() if c in df.columns}
+        raw = {f: str(row[c]).strip() for f, c in mapped}
         errors, vals = [], dict(raw)
         for f in req:
             if raw.get(f, "") == "":
@@ -234,7 +241,7 @@ def _reject(rejected, src, errs, v):
 
 
 def stage_gl(db, actor, batch, rows) -> dict:
-    from sqlalchemy import select
+    from sqlalchemy import insert, select
 
     from .. import models as M
 
@@ -250,6 +257,7 @@ def stage_gl(db, actor, batch, rows) -> dict:
     seen: set = set()
     rejected: list = []
     warnings: list[str] = []
+    new_rows: list[dict] = []
     accepted = 0
     for src, v, errs in rows:
         if errs:
@@ -262,21 +270,24 @@ def stage_gl(db, actor, batch, rows) -> dict:
                 f"({v['gl_account']} {v['txn_date']} {v['amount']}). Kept and flagged."
             )
         seen.add(key)
-        db.add(
-            M.GLTransaction(
-                organization_id=actor.org_id,
-                property_id=pid,
-                import_batch_id=batch.id,
-                source_row=src,
-                gl_account=v["gl_account"],
-                account_name=v.get("account_name", ""),
-                txn_date=v["txn_date"],
-                amount=v["amount"],
-                vendor=v.get("vendor", ""),
-                description=v.get("description", ""),
-            )
+        new_rows.append(
+            {
+                "organization_id": actor.org_id,
+                "property_id": pid,
+                "import_batch_id": batch.id,
+                "source_row": src,
+                "gl_account": v["gl_account"],
+                "account_name": v.get("account_name", ""),
+                "txn_date": v["txn_date"],
+                "amount": v["amount"],
+                "vendor": v.get("vendor", ""),
+                "description": v.get("description", ""),
+            }
         )
         accepted += 1
+    if new_rows:
+        # One executemany instead of 20,000 ORM objects. Python-side defaults (id) still apply.
+        db.execute(insert(M.GLTransaction), new_rows)
     # Every new account starts as needs_review, so nothing is recoverable by default.
     accounts = {v["gl_account"] for _, v, e in rows if not e}
     mapped = set(

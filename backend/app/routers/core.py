@@ -245,7 +245,7 @@ def dashboard(actor: Actor = Depends(current_actor), db: Session = Depends(get_s
     props = db.scalars(scoped(M.Property, actor).order_by(M.Property.name)).all()
 
     def grouped(stmt):
-        return dict(db.execute(stmt).tuples().all())
+        return {k: v for k, v in db.execute(stmt).all()}  # noqa: C416
 
     tenants = grouped(
         select(M.Tenant.property_id, func.count()).where(M.Tenant.organization_id == org).group_by(M.Tenant.property_id)
