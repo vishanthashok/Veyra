@@ -9,3 +9,4 @@ node_modules/
 backend/storage/
 *.log
 .pgdata/
+demo/output/
