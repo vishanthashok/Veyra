@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: veyra, POSTGRES_PASSWORD: veyra, POSTGRES_DB: veyra_test }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U veyra" --health-interval 3s --health-retries 20
+    env:
+      VEYRA_DATABASE_URL: postgresql+psycopg://veyra:veyra@localhost:5432/veyra_test
+      VEYRA_TEST_DATABASE_URL: postgresql+psycopg://veyra:veyra@localhost:5432/veyra_test
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: { version: "0.11.32" }
+      - run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Type check engine (strict)
+        run: uv run mypy
+      - name: Migrations apply, roll back and match models
+        run: |
+          uv run alembic upgrade head
+          uv run alembic downgrade base
+          uv run alembic upgrade head
+          uv run alembic check
+      - name: Tests
+        run: uv run pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm, cache-dependency-path: frontend/pnpm-lock.yaml }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm format:check
+      - run: pnpm test
+      - run: pnpm build
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: veyra, POSTGRES_PASSWORD: veyra, POSTGRES_DB: veyra }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U veyra" --health-interval 3s --health-retries 20
+    env:
+      VEYRA_DATABASE_URL: postgresql+psycopg://veyra:veyra@localhost:5432/veyra
+      CI: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: { version: "0.11.32" }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm, cache-dependency-path: frontend/pnpm-lock.yaml }
+      - name: Start API with synthetic demo data
+        working-directory: backend
+        run: |
+          uv sync --frozen
+          uv run alembic upgrade head
+          uv run python -m app.demo_seed
+          nohup uv run uvicorn app.main:app --port 8000 > api.log 2>&1 &
+      - name: Build and start web
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+          nohup pnpm start -p 3000 > web.log 2>&1 &
+          npx wait-on -t 60000 http://localhost:3000/login http://localhost:8000/api/health
+      - working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - working-directory: frontend
+        run: pnpm e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: |
+            frontend/playwright-report
+            backend/api.log
+            frontend/web.log
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    continue-on-error: true  # report-only until triage policy is agreed; see docs/SECURITY_REVIEW.md
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: { version: "0.11.32" }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - name: Python dependencies
+        working-directory: backend
+        run: uv export --frozen --no-dev --no-hashes > req.txt && uvx pip-audit -r req.txt
+      - name: Node dependencies
+        working-directory: frontend
+        run: pnpm audit --prod --audit-level high

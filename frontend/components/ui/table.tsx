@@ -15,7 +15,13 @@ export function TR({ className, ...p }: React.ComponentProps<"tr">) {
   return <tr className={cn("border-b border-line last:border-0", className)} {...p} />;
 }
 export function TH({ className, ...p }: React.ComponentProps<"th">) {
-  return <th scope="col" className={cn("h-8 whitespace-nowrap px-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted", className)} {...p} />;
+  return (
+    <th
+      scope="col"
+      className={cn("h-8 whitespace-nowrap px-3 text-left text-2xs font-semibold uppercase tracking-wide text-muted", className)}
+      {...p}
+    />
+  );
 }
 export function TD({ className, ...p }: React.ComponentProps<"td">) {
   return <td className={cn("px-3 py-2 align-top text-ink", className)} {...p} />;

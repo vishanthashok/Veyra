@@ -6,8 +6,16 @@ export function Panel({ className, ...p }: React.ComponentProps<"section">) {
 }
 
 export function PanelHeader({
-  title, description, actions, className,
-}: { title: React.ReactNode; description?: React.ReactNode; actions?: React.ReactNode; className?: string }) {
+  title,
+  description,
+  actions,
+  className,
+}: {
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  actions?: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div className={cn("flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3", className)}>
       <div className="min-w-0">

@@ -16,8 +16,20 @@ export function Textarea({ className, ...p }: React.ComponentProps<"textarea">) 
 
 /** Labelled field with hint and error text wired to aria-describedby. */
 export function Field({
-  label, hint, error, children, className, required,
-}: { label: string; hint?: string; error?: string | null; children: React.ReactElement<Record<string, unknown>>; className?: string; required?: boolean }) {
+  label,
+  hint,
+  error,
+  children,
+  className,
+  required,
+}: {
+  label: string;
+  hint?: string;
+  error?: string | null;
+  children: React.ReactElement<Record<string, unknown>>;
+  className?: string;
+  required?: boolean;
+}) {
   const id = React.useId();
   const hintId = hint ? `${id}-hint` : undefined;
   const errId = error ? `${id}-err` : undefined;
@@ -31,11 +43,24 @@ export function Field({
     <div className={cn("flex min-w-0 flex-col gap-1", className)}>
       <label htmlFor={id} className="text-xs font-medium text-ink-2">
         {label}
-        {required && <span className="text-error" aria-hidden> *</span>}
+        {required && (
+          <span className="text-error" aria-hidden>
+            {" "}
+            *
+          </span>
+        )}
       </label>
       {child}
-      {hint && !error && <p id={hintId} className="text-2xs text-muted">{hint}</p>}
-      {error && <p id={errId} role="alert" className="text-2xs text-error">{error}</p>}
+      {hint && !error && (
+        <p id={hintId} className="text-2xs text-muted">
+          {hint}
+        </p>
+      )}
+      {error && (
+        <p id={errId} role="alert" className="text-2xs text-error">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

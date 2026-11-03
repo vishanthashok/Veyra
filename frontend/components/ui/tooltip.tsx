@@ -9,7 +9,10 @@ export function Tooltip({ content, children }: { content: React.ReactNode; child
     <T.Root delayDuration={300}>
       <T.Trigger asChild>{children}</T.Trigger>
       <T.Portal>
-        <T.Content sideOffset={6} className="anim-pop z-[var(--z-popover)] max-w-72 rounded-md bg-nav px-2 py-1 text-xs text-nav-ink shadow-pop">
+        <T.Content
+          sideOffset={6}
+          className="anim-pop z-[var(--z-popover)] max-w-72 rounded-md bg-nav px-2 py-1 text-xs text-nav-ink shadow-pop"
+        >
           {content}
         </T.Content>
       </T.Portal>

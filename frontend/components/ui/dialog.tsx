@@ -10,8 +10,18 @@ export const DialogClose = D.Close;
 
 /** Accessible modal: focus trap, Escape to close, labelled by title and description. */
 export function DialogContent({
-  title, description, children, className, footer,
-}: { title: string; description?: React.ReactNode; children?: React.ReactNode; className?: string; footer?: React.ReactNode }) {
+  title,
+  description,
+  children,
+  className,
+  footer,
+}: {
+  title: string;
+  description?: React.ReactNode;
+  children?: React.ReactNode;
+  className?: string;
+  footer?: React.ReactNode;
+}) {
   return (
     <D.Portal>
       <D.Overlay className="anim-fade fixed inset-0 z-[var(--z-dialog)] bg-[#0f1a2c]/40" />
@@ -24,7 +34,11 @@ export function DialogContent({
         <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
           <div>
             <D.Title className="text-base font-semibold text-ink">{title}</D.Title>
-            {description ? <D.Description className="mt-1 text-sm text-muted">{description}</D.Description> : <D.Description className="sr-only">{title}</D.Description>}
+            {description ? (
+              <D.Description className="mt-1 text-sm text-muted">{description}</D.Description>
+            ) : (
+              <D.Description className="sr-only">{title}</D.Description>
+            )}
           </div>
           <D.Close className="rounded-md p-1 text-muted hover:bg-surface-3 hover:text-ink" aria-label="Close">
             <X className="size-4" />
@@ -39,8 +53,18 @@ export function DialogContent({
 
 /** Right-side drawer for inspectors. */
 export function SheetContent({
-  title, description, children, className, actions,
-}: { title: React.ReactNode; description?: React.ReactNode; children?: React.ReactNode; className?: string; actions?: React.ReactNode }) {
+  title,
+  description,
+  children,
+  className,
+  actions,
+}: {
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  children?: React.ReactNode;
+  className?: string;
+  actions?: React.ReactNode;
+}) {
   return (
     <D.Portal>
       <D.Overlay className="anim-fade fixed inset-0 z-[var(--z-dialog)] bg-[#0f1a2c]/30" />
@@ -53,7 +77,11 @@ export function SheetContent({
         <div className="flex items-start justify-between gap-4 border-b border-line bg-surface px-5 py-4">
           <div className="min-w-0">
             <D.Title className="truncate text-base font-semibold text-ink">{title}</D.Title>
-            {description ? <D.Description className="mt-0.5 text-xs text-muted">{description}</D.Description> : <D.Description className="sr-only">Details</D.Description>}
+            {description ? (
+              <D.Description className="mt-0.5 text-xs text-muted">{description}</D.Description>
+            ) : (
+              <D.Description className="sr-only">Details</D.Description>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {actions}

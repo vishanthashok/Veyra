@@ -1,4 +1,15 @@
-import { AlertTriangle, BookOpenCheck, Building2, FileSpreadsheet, LayoutDashboard, ListChecks, Scale, Tags, Upload, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  BookOpenCheck,
+  Building2,
+  FileSpreadsheet,
+  LayoutDashboard,
+  ListChecks,
+  Scale,
+  Tags,
+  Upload,
+  Users,
+} from "lucide-react";
 
 export const PROPERTY_NAV = [
   { slug: "", label: "Overview", icon: Building2 },

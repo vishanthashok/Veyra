@@ -1,8 +1,19 @@
 "use client";
 import {
-  type Cell, type ColumnDef, type ColumnFiltersState, type Row, type RowSelectionState, type SortingState,
-  type VisibilityState, flexRender, getCoreRowModel, getFacetedUniqueValues, getFilteredRowModel,
-  getPaginationRowModel, getSortedRowModel, useReactTable,
+  type Cell,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type Row,
+  type RowSelectionState,
+  type SortingState,
+  type VisibilityState,
+  flexRender,
+  getCoreRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, ChevronsUpDown, Columns3, Download, Search, X } from "lucide-react";
 import * as React from "react";
@@ -55,17 +66,33 @@ function csvEscape(v: unknown) {
 }
 
 export function DataTable<T>({
-  data, columns, getRowId, loading, searchPlaceholder = "Search", facets = [], selectable, bulkActions, onRowClick,
-  activeRowId, pageSize = 50, exportName, toolbar, empty, initialSorting = [], initialHidden = [], maxHeight,
-  compact, caption, rowClassName, hideColumnsMenu,
+  data,
+  columns,
+  getRowId,
+  loading,
+  searchPlaceholder = "Search",
+  facets = [],
+  selectable,
+  bulkActions,
+  onRowClick,
+  activeRowId,
+  pageSize = 50,
+  exportName,
+  toolbar,
+  empty,
+  initialSorting = [],
+  initialHidden = [],
+  maxHeight,
+  compact,
+  caption,
+  rowClassName,
+  hideColumnsMenu,
 }: Props<T>) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
-    Object.fromEntries(initialHidden.map((c) => [c, false])),
-  );
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(Object.fromEntries(initialHidden.map((c) => [c, false])));
 
   const allColumns = React.useMemo<ColumnDef<T, unknown>[]>(() => {
     if (!selectable) return columns;
@@ -80,7 +107,9 @@ export function DataTable<T>({
             aria-label="Select all rows on this page"
             className="size-3.5 accent-[var(--accent)]"
             checked={table.getIsAllPageRowsSelected()}
-            ref={(el) => { if (el) el.indeterminate = table.getIsSomePageRowsSelected(); }}
+            ref={(el) => {
+              if (el) el.indeterminate = table.getIsSomePageRowsSelected();
+            }}
             onChange={table.getToggleAllPageRowsSelectedHandler()}
           />
         ),
@@ -103,12 +132,19 @@ export function DataTable<T>({
   // TanStack Table manages its own memoization; React Compiler skips this component by design.
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data, columns: allColumns, getRowId,
+    data,
+    columns: allColumns,
+    getRowId,
     state: { sorting, globalFilter, columnFilters, rowSelection, columnVisibility },
-    onSortingChange: setSorting, onGlobalFilterChange: setGlobalFilter, onColumnFiltersChange: setColumnFilters,
-    onRowSelectionChange: setRowSelection, onColumnVisibilityChange: setColumnVisibility,
-    getCoreRowModel: getCoreRowModel(), getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(), getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
+    onRowSelectionChange: setRowSelection,
+    onColumnVisibilityChange: setColumnVisibility,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     initialState: { pagination: { pageSize } },
     enableRowSelection: !!selectable,
@@ -122,9 +158,11 @@ export function DataTable<T>({
   function exportCsv() {
     const cols = table.getVisibleLeafColumns().filter((c) => c.id !== "_select");
     const header = cols.map((c) => c.columnDef.meta?.label ?? (typeof c.columnDef.header === "string" ? c.columnDef.header : c.id));
-    const lines = table.getFilteredRowModel().rows.map((r) =>
-      cols.map((c) => csvEscape(c.columnDef.meta?.exportValue ? c.columnDef.meta.exportValue(r.original) : r.getValue(c.id))).join(","),
-    );
+    const lines = table
+      .getFilteredRowModel()
+      .rows.map((r) =>
+        cols.map((c) => csvEscape(c.columnDef.meta?.exportValue ? c.columnDef.meta.exportValue(r.original) : r.getValue(c.id))).join(","),
+      );
     const blob = new Blob([[header.map(csvEscape).join(","), ...lines].join("\n")], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -153,7 +191,10 @@ export function DataTable<T>({
           <div className="flex flex-1 flex-wrap items-center gap-2" role="region" aria-label="Bulk actions">
             <span className="text-sm font-medium">{selected.length} selected</span>
             {bulkActions(selected, () => setRowSelection({}))}
-            <Button size="xs" variant="ghost" onClick={() => setRowSelection({})}><X />Clear</Button>
+            <Button size="xs" variant="ghost" onClick={() => setRowSelection({})}>
+              <X />
+              Clear
+            </Button>
           </div>
         ) : (
           <>
@@ -170,7 +211,12 @@ export function DataTable<T>({
             {facets.map((f) => {
               const col = table.getColumn(f.columnId);
               if (!col) return null;
-              const opts = f.options ?? [...col.getFacetedUniqueValues().keys()].filter((v) => v != null && v !== "").sort().map((v) => ({ value: String(v), label: String(v) }));
+              const opts =
+                f.options ??
+                [...col.getFacetedUniqueValues().keys()]
+                  .filter((v) => v != null && v !== "")
+                  .sort()
+                  .map((v) => ({ value: String(v), label: String(v) }));
               return (
                 <select
                   key={f.columnId}
@@ -180,7 +226,11 @@ export function DataTable<T>({
                   className="h-7 rounded-md border border-line-strong bg-surface px-2 text-xs text-ink-2 outline-none focus-visible:border-accent"
                 >
                   <option value="">{f.label}: all</option>
-                  {opts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  {opts.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
                 </select>
               );
             })}
@@ -188,24 +238,41 @@ export function DataTable<T>({
               {toolbar}
               {hideable.length > 0 && !hideColumnsMenu && (
                 <Menu>
-                  <MenuTrigger asChild><Button size="xs" variant="ghost" aria-label="Choose columns"><Columns3 />Columns</Button></MenuTrigger>
+                  <MenuTrigger asChild>
+                    <Button size="xs" variant="ghost" aria-label="Choose columns">
+                      <Columns3 />
+                      Columns
+                    </Button>
+                  </MenuTrigger>
                   <MenuContent>
                     <MenuLabel>Visible columns</MenuLabel>
                     {hideable.map((c) => (
-                      <MenuCheckboxItem key={c.id} checked={c.getIsVisible()} onCheckedChange={(v) => c.toggleVisibility(!!v)} onSelect={(e) => e.preventDefault()}>
+                      <MenuCheckboxItem
+                        key={c.id}
+                        checked={c.getIsVisible()}
+                        onCheckedChange={(v) => c.toggleVisibility(!!v)}
+                        onSelect={(e) => e.preventDefault()}
+                      >
                         {c.columnDef.meta?.label ?? (typeof c.columnDef.header === "string" ? c.columnDef.header : c.id)}
                       </MenuCheckboxItem>
                     ))}
                   </MenuContent>
                 </Menu>
               )}
-              {exportName && <Button size="xs" variant="ghost" onClick={exportCsv}><Download />CSV</Button>}
+              {exportName && (
+                <Button size="xs" variant="ghost" onClick={exportCsv}>
+                  <Download />
+                  CSV
+                </Button>
+              )}
             </div>
           </>
         )}
       </div>
 
-      {loading ? <TableSkeleton cols={Math.min(6, columns.length)} /> : (
+      {loading ? (
+        <TableSkeleton cols={Math.min(6, columns.length)} />
+      ) : (
         <div className="overflow-auto" style={maxHeight ? { maxHeight } : undefined}>
           <table className="w-full border-collapse text-sm">
             <caption className="sr-only">{caption}</caption>
@@ -221,19 +288,34 @@ export function DataTable<T>({
                         colSpan={h.colSpan}
                         scope={h.colSpan > 1 ? "colgroup" : "col"}
                         aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
-                        className={cn("h-8 whitespace-nowrap px-[var(--cell-x)] text-2xs font-semibold uppercase tracking-wide text-muted",
-                          meta?.align === "right" ? "text-right" : "text-left", h.colSpan > 1 && "border-l border-line text-center", meta?.headerClassName)}
+                        className={cn(
+                          "h-8 whitespace-nowrap px-[var(--cell-x)] text-2xs font-semibold uppercase tracking-wide text-muted",
+                          meta?.align === "right" ? "text-right" : "text-left",
+                          h.colSpan > 1 && "border-l border-line text-center",
+                          meta?.headerClassName,
+                        )}
                       >
                         {h.isPlaceholder ? null : h.column.getCanSort() ? (
                           <button
                             type="button"
                             onClick={h.column.getToggleSortingHandler()}
-                            className={cn("inline-flex items-center gap-1 uppercase hover:text-ink", meta?.align === "right" && "flex-row-reverse")}
+                            className={cn(
+                              "inline-flex items-center gap-1 uppercase hover:text-ink",
+                              meta?.align === "right" && "flex-row-reverse",
+                            )}
                           >
                             {flexRender(h.column.columnDef.header, h.getContext())}
-                            {sorted === "asc" ? <ArrowUp className="size-3" /> : sorted === "desc" ? <ArrowDown className="size-3" /> : <ChevronsUpDown className="size-3 opacity-40" />}
+                            {sorted === "asc" ? (
+                              <ArrowUp className="size-3" />
+                            ) : sorted === "desc" ? (
+                              <ArrowDown className="size-3" />
+                            ) : (
+                              <ChevronsUpDown className="size-3 opacity-40" />
+                            )}
                           </button>
-                        ) : flexRender(h.column.columnDef.header, h.getContext())}
+                        ) : (
+                          flexRender(h.column.columnDef.header, h.getContext())
+                        )}
                       </th>
                     );
                   })}
@@ -264,8 +346,12 @@ export function DataTable<T>({
                       return (
                         <td
                           key={cell.id}
-                          className={cn("px-[var(--cell-x)] align-middle text-ink", compact ? "h-[var(--row-h-compact)] py-1" : "h-[var(--row-h)] py-1.5",
-                            meta?.align === "right" && "num", meta?.cellClassName)}
+                          className={cn(
+                            "px-[var(--cell-x)] align-middle text-ink",
+                            compact ? "h-[var(--row-h-compact)] py-1" : "h-[var(--row-h)] py-1.5",
+                            meta?.align === "right" && "num",
+                            meta?.cellClassName,
+                          )}
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
@@ -278,7 +364,7 @@ export function DataTable<T>({
           </table>
           {rows.length === 0 && (
             <div className="px-4 py-10 text-center text-sm text-muted">
-              {globalFilter || columnFilters.length ? "No rows match these filters." : empty ?? "Nothing here yet."}
+              {globalFilter || columnFilters.length ? "No rows match these filters." : (empty ?? "Nothing here yet.")}
             </div>
           )}
         </div>
@@ -291,13 +377,25 @@ export function DataTable<T>({
             {Math.min(filteredCount, (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize)} of {filteredCount}
           </span>
           <div className="flex gap-1">
-            <Button size="xs" variant="ghost" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} aria-label="Previous page"><ChevronLeft /></Button>
-            <Button size="xs" variant="ghost" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} aria-label="Next page"><ChevronRight /></Button>
+            <Button
+              size="xs"
+              variant="ghost"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              aria-label="Previous page"
+            >
+              <ChevronLeft />
+            </Button>
+            <Button size="xs" variant="ghost" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()} aria-label="Next page">
+              <ChevronRight />
+            </Button>
           </div>
         </div>
       )}
       {!loading && filteredCount <= table.getState().pagination.pageSize && filteredCount > 0 && (
-        <div className="border-t border-line px-3 py-1.5 text-2xs text-muted tabular">{filteredCount} {filteredCount === 1 ? "row" : "rows"}</div>
+        <div className="border-t border-line px-3 py-1.5 text-2xs text-muted tabular">
+          {filteredCount} {filteredCount === 1 ? "row" : "rows"}
+        </div>
       )}
     </div>
   );

@@ -34,11 +34,16 @@ export function MenuItem({ className, ...p }: React.ComponentProps<typeof M.Item
 export function MenuCheckboxItem({ className, children, ...p }: React.ComponentProps<typeof M.CheckboxItem>) {
   return (
     <M.CheckboxItem
-      className={cn("flex cursor-default select-none items-center gap-2 rounded-[var(--radius-sm)] px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-surface-3", className)}
+      className={cn(
+        "flex cursor-default select-none items-center gap-2 rounded-[var(--radius-sm)] px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-surface-3",
+        className,
+      )}
       {...p}
     >
       <span className="flex size-3.5 items-center justify-center rounded-[3px] border border-line-strong">
-        <M.ItemIndicator><span className="block size-2 rounded-[1px] bg-accent" /></M.ItemIndicator>
+        <M.ItemIndicator>
+          <span className="block size-2 rounded-[1px] bg-accent" />
+        </M.ItemIndicator>
       </span>
       {children}
     </M.CheckboxItem>

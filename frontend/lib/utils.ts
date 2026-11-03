@@ -55,7 +55,11 @@ export function compareDecimal(a: string | null | undefined, b: string | null | 
 
 const DATE = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 const DATETIME = new Intl.DateTimeFormat("en-US", {
-  month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
 });
 
 /** "2026-03-05" -> "Mar 5, 2026". ISO dates are calendar dates, so format in UTC. */

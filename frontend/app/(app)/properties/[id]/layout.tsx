@@ -13,6 +13,13 @@ export default function PropertyLayout({ children }: { children: React.ReactNode
     return { property, periods };
   }, [id]);
   if (error) return <ErrorBox error={error} />;
-  if (!data) return <div className="space-y-3" role="status" aria-label="Loading property"><Skeleton className="h-3 w-48" /><Skeleton className="h-6 w-72" /><Skeleton className="mt-6 h-64 w-full" /></div>;
+  if (!data)
+    return (
+      <div className="space-y-3" role="status" aria-label="Loading property">
+        <Skeleton className="h-3 w-48" />
+        <Skeleton className="h-6 w-72" />
+        <Skeleton className="mt-6 h-64 w-full" />
+      </div>
+    );
   return <PropertyCtx.Provider value={{ ...data, reload, base: `/properties/${id}` }}>{children}</PropertyCtx.Provider>;
 }

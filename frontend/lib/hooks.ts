@@ -36,7 +36,10 @@ export function useLoad<T>(fn: () => Promise<T>, deps: unknown[]) {
 export function useUnsavedChanges(dirty: boolean) {
   useEffect(() => {
     if (!dirty) return;
-    const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    const h = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
     window.addEventListener("beforeunload", h);
     return () => window.removeEventListener("beforeunload", h);
   }, [dirty]);
@@ -52,9 +55,14 @@ export function useStoredFlag(key: string, initial: boolean): [boolean, (v: bool
       if (s !== null) setV(s === "1");
     } catch {}
   }, [key]);
-  const set = useCallback((x: boolean) => {
-    setV(x);
-    try { window.localStorage.setItem(key, x ? "1" : "0"); } catch {}
-  }, [key]);
+  const set = useCallback(
+    (x: boolean) => {
+      setV(x);
+      try {
+        window.localStorage.setItem(key, x ? "1" : "0");
+      } catch {}
+    },
+    [key],
+  );
   return [v, set];
 }

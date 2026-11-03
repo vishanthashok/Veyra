@@ -24,7 +24,12 @@ type Props = React.ComponentProps<"button"> & VariantProps<typeof buttonVariants
 
 export function Button({ className, variant, size, loading, disabled, children, ...props }: Props) {
   return (
-    <button className={cn(buttonVariants({ variant, size }), className)} disabled={disabled || loading} aria-busy={loading || undefined} {...props}>
+    <button
+      className={cn(buttonVariants({ variant, size }), className)}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      {...props}
+    >
       {loading && <Loader2 className="animate-spin" aria-hidden />}
       {children}
     </button>

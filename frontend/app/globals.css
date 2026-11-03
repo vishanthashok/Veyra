@@ -15,34 +15,42 @@
   --surface-3: #f1efeb;
   --line: #e6e3dd;
   --line-strong: #d3cfc7;
-  --ink: #16191f;          /* 17.6:1 on surface */
-  --ink-2: #3f444c;        /* 10.1:1 */
-  --muted: #646a73;        /* 5.6:1 */
-  --subtle: #8a9099;       /* decorative only, never body text */
+  --ink: #16191f; /* 17.6:1 on surface */
+  --ink-2: #3f444c; /* 10.1:1 */
+  --muted: #646a73; /* 5.6:1 */
+  --subtle: #8a9099; /* decorative only, never body text */
 
   /* Navigation */
   --nav: #0f1a2c;
   --nav-2: #18263d;
   --nav-3: #22324d;
-  --nav-ink: #e4e9f1;      /* 14.2:1 on nav */
-  --nav-muted: #9aa7bb;    /* 6.9:1 on nav */
+  --nav-ink: #e4e9f1; /* 14.2:1 on nav */
+  --nav-muted: #9aa7bb; /* 6.9:1 on nav */
 
   /* Accent: restrained teal-blue */
-  --accent: #0b6e99;       /* 5.4:1 on white */
+  --accent: #0b6e99; /* 5.4:1 on white */
   --accent-hover: #095a7d;
   --accent-soft: #e7f2f7;
   --accent-ink: #ffffff;
   --ring: rgb(11 110 153 / 0.35);
 
   /* Status (fg on bg is >= 4.5:1) */
-  --error: #b42318;   --error-bg: #fef3f2;   --error-line: #fecdca;
-  --warning: #93370d; --warning-bg: #fffaeb; --warning-line: #fedf89;
-  --success: #067647; --success-bg: #ecfdf3; --success-line: #abefc6;
-  --info: #175cd3;    --info-bg: #eff8ff;    --info-line: #b2ddff;
+  --error: #b42318;
+  --error-bg: #fef3f2;
+  --error-line: #fecdca;
+  --warning: #93370d;
+  --warning-bg: #fffaeb;
+  --warning-line: #fedf89;
+  --success: #067647;
+  --success-bg: #ecfdf3;
+  --success-line: #abefc6;
+  --info: #175cd3;
+  --info-bg: #eff8ff;
+  --info-line: #b2ddff;
 
   /* Money direction (used with text labels, never color alone) */
-  --under: #93370d;   /* billed less than provisional share */
-  --over: #175cd3;    /* billed more than provisional share */
+  --under: #93370d; /* billed less than provisional share */
+  --over: #175cd3; /* billed more than provisional share */
 
   /* Radius */
   --radius-sm: 4px;
@@ -173,15 +181,21 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
 }
 
 @keyframes veyra-shimmer {
-  0% { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
 }
 .skeleton {
   background: linear-gradient(90deg, var(--surface-3) 0px, #ebe8e3 80px, var(--surface-3) 160px);
@@ -190,9 +204,40 @@ body {
   border-radius: var(--radius-sm);
 }
 
-@keyframes veyra-fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes veyra-slide-in { from { transform: translateX(16px); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes veyra-pop-in { from { transform: translateY(4px) scale(0.98); opacity: 0; } to { transform: none; opacity: 1; } }
-.anim-fade { animation: veyra-fade-in var(--dur-base) var(--ease); }
-.anim-slide { animation: veyra-slide-in var(--dur-base) var(--ease); }
-.anim-pop { animation: veyra-pop-in var(--dur-fast) var(--ease); }
+@keyframes veyra-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes veyra-slide-in {
+  from {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes veyra-pop-in {
+  from {
+    transform: translateY(4px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.anim-fade {
+  animation: veyra-fade-in var(--dur-base) var(--ease);
+}
+.anim-slide {
+  animation: veyra-slide-in var(--dur-base) var(--ease);
+}
+.anim-pop {
+  animation: veyra-pop-in var(--dur-fast) var(--ease);
+}
