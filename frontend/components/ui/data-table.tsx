@@ -297,12 +297,12 @@ export function DataTable<T>({
                       <th
                         key={h.id}
                         colSpan={h.colSpan}
-                        scope={h.colSpan > 1 ? "colgroup" : "col"}
+                        scope={h.column.columns.length > 0 ? "colgroup" : "col"}
                         aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
                         className={cn(
                           "h-9 whitespace-nowrap px-[var(--cell-x)] text-xs font-medium text-muted",
                           meta?.align === "right" ? "text-right" : "text-left",
-                          h.colSpan > 1 &&
+                          h.column.columns.length > 0 &&
                             "h-7 border-l border-line pb-0 text-left text-2xs font-medium uppercase tracking-[0.04em] text-subtle first:border-l-0",
                           meta?.headerClassName,
                         )}
