@@ -58,6 +58,12 @@ type Props<T> = {
   caption: string;
   rowClassName?: (row: T) => string | undefined;
   hideColumnsMenu?: boolean;
+  /** Show the column visibility menu (off by default; use on wide tables). */
+  columnsMenu?: boolean;
+  /** Hide the search/filter bar entirely (small tables). */
+  noToolbar?: boolean;
+  /** Extra content placed at the start of the filter bar, e.g. a segmented status control. */
+  filterStart?: React.ReactNode;
 };
 
 function csvEscape(v: unknown) {
@@ -87,6 +93,9 @@ export function DataTable<T>({
   caption,
   rowClassName,
   hideColumnsMenu,
+  columnsMenu,
+  noToolbar,
+  filterStart,
 }: Props<T>) {
   const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
   const [globalFilter, setGlobalFilter] = React.useState("");
@@ -186,89 +195,91 @@ export function DataTable<T>({
 
   return (
     <div className="flex min-w-0 flex-col">
-      <div className="flex flex-wrap items-center gap-2 border-b border-line px-3 py-2">
-        {selected.length > 0 && bulkActions ? (
-          <div className="flex flex-1 flex-wrap items-center gap-2" role="region" aria-label="Bulk actions">
-            <span className="text-sm font-medium">{selected.length} selected</span>
-            {bulkActions(selected, () => setRowSelection({}))}
-            <Button size="xs" variant="ghost" onClick={() => setRowSelection({})}>
-              <X />
-              Clear
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="relative w-full max-w-60">
-              <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-subtle" aria-hidden />
-              <input
-                value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder={searchPlaceholder}
-                aria-label={searchPlaceholder}
-                className="h-7 w-full rounded-md border border-line-strong bg-surface pl-7 pr-2 text-xs outline-none focus-visible:border-accent focus-visible:ring-[3px] focus-visible:ring-[var(--ring)]"
-              />
+      {!(noToolbar && !(selected.length > 0 && bulkActions)) && (
+        <div className="flex min-h-11 flex-wrap items-center gap-2 border-b border-line px-3 py-2">
+          {selected.length > 0 && bulkActions ? (
+            <div className="flex flex-1 flex-wrap items-center gap-2" role="region" aria-label="Bulk actions">
+              <span className="text-sm font-medium tabular">{selected.length} selected</span>
+              {bulkActions(selected, () => setRowSelection({}))}
+              <Button size="xs" variant="ghost" onClick={() => setRowSelection({})}>
+                <X />
+                Clear
+              </Button>
             </div>
-            {facets.map((f) => {
-              const col = table.getColumn(f.columnId);
-              if (!col) return null;
-              const opts =
-                f.options ??
-                [...col.getFacetedUniqueValues().keys()]
-                  .filter((v) => v != null && v !== "")
-                  .sort()
-                  .map((v) => ({ value: String(v), label: String(v) }));
-              return (
-                <select
-                  key={f.columnId}
-                  aria-label={`Filter by ${f.label}`}
-                  value={(col.getFilterValue() as string) ?? ""}
-                  onChange={(e) => col.setFilterValue(e.target.value || undefined)}
-                  className="h-7 rounded-md border border-line-strong bg-surface px-2 text-xs text-ink-2 outline-none focus-visible:border-accent"
-                >
-                  <option value="">{f.label}: all</option>
-                  {opts.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              );
-            })}
-            <div className="ml-auto flex items-center gap-1.5">
-              {toolbar}
-              {hideable.length > 0 && !hideColumnsMenu && (
-                <Menu>
-                  <MenuTrigger asChild>
-                    <Button size="xs" variant="ghost" aria-label="Choose columns">
-                      <Columns3 />
-                      Columns
-                    </Button>
-                  </MenuTrigger>
-                  <MenuContent>
-                    <MenuLabel>Visible columns</MenuLabel>
-                    {hideable.map((c) => (
-                      <MenuCheckboxItem
-                        key={c.id}
-                        checked={c.getIsVisible()}
-                        onCheckedChange={(v) => c.toggleVisibility(!!v)}
-                        onSelect={(e) => e.preventDefault()}
-                      >
-                        {c.columnDef.meta?.label ?? (typeof c.columnDef.header === "string" ? c.columnDef.header : c.id)}
-                      </MenuCheckboxItem>
+          ) : (
+            <>
+              {filterStart}
+              <div className="relative min-w-0 flex-1 sm:max-w-64">
+                <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-subtle" aria-hidden />
+                <input
+                  value={globalFilter}
+                  onChange={(e) => setGlobalFilter(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  aria-label={searchPlaceholder}
+                  className="h-7 w-full rounded-[var(--radius-md)] border border-transparent bg-surface-2 pl-7 pr-2 text-xs outline-none placeholder:text-subtle hover:bg-surface-3 focus-visible:border-accent focus-visible:bg-surface focus-visible:ring-[3px] focus-visible:ring-[var(--ring)]"
+                />
+              </div>
+              {facets.map((f) => {
+                const col = table.getColumn(f.columnId);
+                if (!col) return null;
+                const opts =
+                  f.options ??
+                  [...col.getFacetedUniqueValues().keys()]
+                    .filter((v) => v != null && v !== "")
+                    .sort()
+                    .map((v) => ({ value: String(v), label: String(v) }));
+                return (
+                  <select
+                    key={f.columnId}
+                    aria-label={`Filter by ${f.label}`}
+                    value={(col.getFilterValue() as string) ?? ""}
+                    onChange={(e) => col.setFilterValue(e.target.value || undefined)}
+                    className="h-7 rounded-[var(--radius-md)] border border-dashed border-line-strong bg-surface px-2 text-xs text-ink-2 outline-none hover:border-solid focus-visible:border-accent"
+                  >
+                    <option value="">{f.label}: all</option>
+                    {opts.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
                     ))}
-                  </MenuContent>
-                </Menu>
-              )}
-              {exportName && (
-                <Button size="xs" variant="ghost" onClick={exportCsv}>
-                  <Download />
-                  CSV
-                </Button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+                  </select>
+                );
+              })}
+              <div className="ml-auto flex items-center gap-1.5">
+                {toolbar}
+                {hideable.length > 0 && columnsMenu && !hideColumnsMenu && (
+                  <Menu>
+                    <MenuTrigger asChild>
+                      <Button size="icon-sm" variant="ghost" aria-label="Choose columns">
+                        <Columns3 />
+                      </Button>
+                    </MenuTrigger>
+                    <MenuContent>
+                      <MenuLabel>Visible columns</MenuLabel>
+                      {hideable.map((c) => (
+                        <MenuCheckboxItem
+                          key={c.id}
+                          checked={c.getIsVisible()}
+                          onCheckedChange={(v) => c.toggleVisibility(!!v)}
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          {c.columnDef.meta?.label ?? (typeof c.columnDef.header === "string" ? c.columnDef.header : c.id)}
+                        </MenuCheckboxItem>
+                      ))}
+                    </MenuContent>
+                  </Menu>
+                )}
+                {exportName && (
+                  <Button size="xs" variant="ghost" onClick={exportCsv} aria-label="Export CSV">
+                    <Download />
+                    Export
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <TableSkeleton cols={Math.min(6, columns.length)} />
@@ -276,7 +287,7 @@ export function DataTable<T>({
         <div className="overflow-auto" style={maxHeight ? { maxHeight } : undefined}>
           <table className="w-full border-collapse text-sm">
             <caption className="sr-only">{caption}</caption>
-            <thead className="sticky top-0 z-[var(--z-sticky)] bg-surface-2 shadow-[inset_0_-1px_0_var(--line)]">
+            <thead className="sticky top-0 z-[var(--z-sticky)] bg-surface shadow-[inset_0_-1px_0_var(--line)]">
               {table.getHeaderGroups().map((hg) => (
                 <tr key={hg.id}>
                   {hg.headers.map((h) => {
@@ -286,12 +297,13 @@ export function DataTable<T>({
                       <th
                         key={h.id}
                         colSpan={h.colSpan}
-                        scope={h.colSpan > 1 ? "colgroup" : "col"}
+                        scope={h.column.columns.length > 0 ? "colgroup" : "col"}
                         aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
                         className={cn(
-                          "h-8 whitespace-nowrap px-[var(--cell-x)] text-2xs font-semibold uppercase tracking-wide text-muted",
+                          "h-9 whitespace-nowrap px-[var(--cell-x)] text-xs font-medium text-muted",
                           meta?.align === "right" ? "text-right" : "text-left",
-                          h.colSpan > 1 && "border-l border-line text-center",
+                          h.column.columns.length > 0 &&
+                            "h-7 border-l border-line pb-0 text-left text-2xs font-medium uppercase tracking-[0.04em] text-subtle first:border-l-0",
                           meta?.headerClassName,
                         )}
                       >
@@ -300,7 +312,7 @@ export function DataTable<T>({
                             type="button"
                             onClick={h.column.getToggleSortingHandler()}
                             className={cn(
-                              "inline-flex items-center gap-1 uppercase hover:text-ink",
+                              "group/sort inline-flex items-center gap-1 rounded-sm hover:text-ink",
                               meta?.align === "right" && "flex-row-reverse",
                             )}
                           >
@@ -310,7 +322,7 @@ export function DataTable<T>({
                             ) : sorted === "desc" ? (
                               <ArrowDown className="size-3" />
                             ) : (
-                              <ChevronsUpDown className="size-3 opacity-40" />
+                              <ChevronsUpDown className="size-3 opacity-0 transition-opacity group-hover/sort:opacity-50" />
                             )}
                           </button>
                         ) : (
@@ -335,9 +347,10 @@ export function DataTable<T>({
                     onKeyDown={onRowClick ? (e) => onRowKey(e, row) : undefined}
                     className={cn(
                       "border-b border-line transition-colors duration-[var(--dur-fast)] last:border-0",
-                      onRowClick && "cursor-pointer hover:bg-surface-2 focus-visible:bg-accent-soft focus-visible:outline-none",
-                      row.getIsSelected() && "bg-accent-soft/60",
-                      activeRowId === id && "bg-accent-soft shadow-[inset_2px_0_0_var(--accent)]",
+                      onRowClick &&
+                        "cursor-pointer hover:bg-surface-2 focus-visible:bg-surface-2 focus-visible:shadow-[inset_2px_0_0_var(--accent)] focus-visible:outline-none",
+                      row.getIsSelected() && "bg-accent-soft/50",
+                      activeRowId === id && "bg-accent-soft/70 shadow-[inset_2px_0_0_var(--accent)] hover:bg-accent-soft/70",
                       rowClassName?.(row.original),
                     )}
                   >
@@ -348,7 +361,7 @@ export function DataTable<T>({
                           key={cell.id}
                           className={cn(
                             "px-[var(--cell-x)] align-middle text-ink",
-                            compact ? "h-[var(--row-h-compact)] py-1" : "h-[var(--row-h)] py-1.5",
+                            compact ? "h-[var(--row-h-compact)] py-1" : "h-[var(--row-h)] py-2",
                             meta?.align === "right" && "num",
                             meta?.cellClassName,
                           )}
@@ -363,7 +376,7 @@ export function DataTable<T>({
             </tbody>
           </table>
           {rows.length === 0 && (
-            <div className="px-4 py-10 text-center text-sm text-muted">
+            <div className="px-4 py-12 text-center text-sm text-muted">
               {globalFilter || columnFilters.length ? "No rows match these filters." : (empty ?? "Nothing here yet.")}
             </div>
           )}
@@ -390,11 +403,6 @@ export function DataTable<T>({
               <ChevronRight />
             </Button>
           </div>
-        </div>
-      )}
-      {!loading && filteredCount <= table.getState().pagination.pageSize && filteredCount > 0 && (
-        <div className="border-t border-line px-3 py-1.5 text-2xs text-muted tabular">
-          {filteredCount} {filteredCount === 1 ? "row" : "rows"}
         </div>
       )}
     </div>

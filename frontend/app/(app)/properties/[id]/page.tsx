@@ -14,6 +14,7 @@ import { TBody, TD, TH, THead, TR, Table } from "@/components/ui/table";
 import { api, errorText, type Category, type DashboardRow } from "@/lib/api";
 import { useLoad, useUnsavedChanges } from "@/lib/hooks";
 import { fmtDate } from "@/lib/utils";
+import { SetupTabs } from "./setup-tabs";
 import { crumbs, useProperty } from "./context";
 
 const STEPS: [string, string, string][] = [
@@ -29,7 +30,7 @@ const STEPS: [string, string, string][] = [
 export default function Overview() {
   const ctx = useProperty();
   const { property, periods, reload, base } = ctx;
-  const { reloadProperties } = useApp();
+  const { reloadProperties, readiness } = useApp();
   const dash = useLoad(() => api.get<{ properties: DashboardRow[] }>("/dashboard"), [property.id]);
   const row = dash.data?.properties.find((p) => p.id === property.id);
   const cats = useLoad(() => api.get<Category[]>(`/properties/${property.id}/categories`), [property.id]);
@@ -68,6 +69,7 @@ export default function Overview() {
         description={property.address || undefined}
         meta={<StatusBadge status={property.reconciliation_status === "in_review" ? "in_review_status" : property.reconciliation_status} />}
       />
+      <SetupTabs base={base} tenants={readiness[property.id]?.tenants} />
 
       <div className="grid gap-5 xl:grid-cols-[1fr_380px]">
         <div className="flex min-w-0 flex-col gap-5">

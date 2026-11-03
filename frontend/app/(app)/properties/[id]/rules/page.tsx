@@ -74,7 +74,7 @@ export default function Rules() {
         header: "Rule",
         cell: ({ row }) => (
           <div>
-            <div className="flex items-center gap-1.5 font-mono text-xs font-medium">
+            <div className="flex items-center gap-1.5 whitespace-nowrap font-mono text-xs font-medium">
               {row.original.ref} <span className="text-muted">v{row.original.version}</span>
               {isUnsupported(row.original) && (
                 <Badge tone="error" className="font-sans">

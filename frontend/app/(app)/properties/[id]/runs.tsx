@@ -16,10 +16,10 @@ export function useRuns(pid: string, selected: string | null) {
 export function RunPicker({ runs, value, onChange }: { runs: AuditRun[]; value: string | undefined; onChange: (id: string) => void }) {
   if (!runs.length) return null;
   return (
-    <label className="flex min-w-0 items-center gap-2 text-xs text-muted">
-      <span>Run</span>
+    <label className="flex min-w-0 items-center gap-2 whitespace-nowrap text-xs text-muted">
+      <span>Audit run</span>
       <select
-        className="h-8 w-full min-w-0 max-w-[22rem] rounded-md border border-line-strong bg-surface px-2 text-sm text-ink"
+        className="h-8 w-full min-w-0 max-w-[24rem] rounded-[var(--radius-md)] border border-line-strong bg-surface px-2 text-sm text-ink shadow-xs"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >

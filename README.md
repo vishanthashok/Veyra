@@ -6,9 +6,13 @@ Veyra is a CAM pre-close audit and reconciliation-readiness tool for small comme
 
 It is an accountant-review workflow. It does not interpret leases, does not produce a final year-end reconciliation, and never presents a variance as a confirmed billing error.
 
+![Overview](docs/screenshots/02-overview.png)
+
 ![Audit workspace](docs/screenshots/08-audit-workspace.png)
 
-## What v0.2 does
+## What it does
+
+- **Overview** shows what stands between each property and a clean year-end reconciliation: four metrics, a ranked Action center, recent activity from real records and per-property readiness. The v0.3 interface is documented in [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
 
 - **Imports** GL, billings and lease-rule spreadsheets through a wizard: upload, map columns, dry-run validation, confirm, results. Commits are atomic. Rejected rows are kept and downloadable. Re-importing an identical file needs confirmation.
 - **Expense mapping** in a master-detail review: every account starts as needs review; decisions need an explanation, are versioned and keep history; bulk decisions write one record per account.
@@ -68,7 +72,7 @@ export VEYRA_TEST_DATABASE_URL=postgresql+psycopg://veyra:veyra@localhost:5432/v
 make test
 ```
 
-That runs Ruff, pytest (81 tests, real Postgres), ESLint, TypeScript, Vitest (17 tests) and the production build. End-to-end tests and screenshots are described in [docs/TEST_STRATEGY.md](docs/TEST_STRATEGY.md). CI runs everything, including Playwright, on every pull request.
+That runs Ruff, pytest (83 tests, real Postgres), ESLint, TypeScript, Vitest (24 tests) and the production build. End-to-end tests and screenshots are described in [docs/TEST_STRATEGY.md](docs/TEST_STRATEGY.md). CI runs everything, including Playwright, on every pull request.
 
 ## Documentation
 
@@ -81,7 +85,8 @@ That runs Ruff, pytest (81 tests, real Postgres), ESLint, TypeScript, Vitest (17
 | [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) | Verified controls and open items before real customer data |
 | [docs/TEST_STRATEGY.md](docs/TEST_STRATEGY.md) | Test layers and how to run them |
 | [docs/VALIDATION.md](docs/VALIDATION.md) | Target customer, workflow, competitors, sales plan |
-| [docs/screenshots](docs/screenshots) | Every major screen |
+| [docs/UI_CRITIQUE.md](docs/UI_CRITIQUE.md) | Critique of the v0.2 interface and redesign principles |
+| [docs/screenshots](docs/screenshots) | Every major screen, plus overview, audit and exceptions at 1280, 768 and 390 px |
 
 ## Security status
 
