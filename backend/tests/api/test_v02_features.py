@@ -245,3 +245,25 @@ def test_engine_values_unchanged_for_demo(client, demo):
         "Rio Grande Pizza": "7010.09",
     }
     assert sum(Decimal(v) for v in totals.values() if v) == Decimal("95715.72")
+
+
+def test_activity_is_built_from_real_records(client, demo):
+    events = client.get("/api/v1/activity", params={"limit": 100}).json()
+    kinds = {e["kind"] for e in events}
+    assert {"audit_run", "import", "expense_mapping", "lease_rule"} <= kinds
+    assert [e["at"] for e in events] == sorted([e["at"] for e in events], reverse=True)
+    # Exactly the 3 committed imports and 7 rule approvals from the seed, no invented events.
+    assert sum(e["kind"] == "import" for e in events) == 3
+    assert sum(e["kind"] == "lease_rule" for e in events) == 7
+    run = next(e for e in events if e["kind"] == "audit_run")
+    assert run["detail"] == "5 calculated, 3 unresolved"
+    scoped = client.get("/api/v1/activity", params={"property_id": demo["property_id"]}).json()
+    assert all(e["property_id"] == demo["property_id"] for e in scoped)
+
+
+def test_dashboard_exposes_period_and_open_exception_types(client, demo):
+    d = next(p for p in client.get("/api/v1/dashboard").json()["properties"] if p["id"] == demo["property_id"])
+    assert d["period"]["label"] == "FY2026 YTD Sep" and d["period"]["through_date"] == "2026-09-30"
+    types = {(t["type"], t["severity"]): t["count"] for t in d["open_exception_types"]}
+    assert types[("MISSING_LEASE_RULE", "error")] == 1
+    assert d["open_exception_types"][0]["severity"] == "error"

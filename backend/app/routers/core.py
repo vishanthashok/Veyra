@@ -238,6 +238,10 @@ def create_category(
 # Dashboard -------------------------------------------------------------------
 
 
+def _severity_order(x: dict) -> tuple[int, str]:
+    return (["error", "warning", "info"].index(x["severity"]), x["type"])
+
+
 @router.get("/dashboard")
 def dashboard(actor: Actor = Depends(current_actor), db: Session = Depends(get_session)):
     """Readiness per property with a fixed number of grouped queries (F-14)."""
@@ -322,6 +326,29 @@ def dashboard(actor: Actor = Depends(current_actor), db: Session = Depends(get_s
             .group_by(M.AuditExceptionRow.property_id, M.AuditExceptionRow.severity)
         ):
             open_exc.setdefault(pid, {})[sev] = n
+    open_types: dict = {}
+    if latest:
+        for pid, typ, sev, n in db.execute(
+            select(
+                M.AuditExceptionRow.property_id,
+                M.AuditExceptionRow.type,
+                M.AuditExceptionRow.severity,
+                func.count(),
+            )
+            .where(
+                M.AuditExceptionRow.audit_run_id.in_([r.id for r in latest.values()]),
+                M.AuditExceptionRow.status.in_(OPEN_STATUSES),
+            )
+            .group_by(M.AuditExceptionRow.property_id, M.AuditExceptionRow.type, M.AuditExceptionRow.severity)
+        ):
+            open_types.setdefault(pid, []).append({"type": typ, "severity": sev, "count": n})
+    periods: dict = {}
+    for per in db.scalars(
+        scoped(M.ReportingPeriod, actor).order_by(
+            M.ReportingPeriod.fiscal_year_start.desc(), M.ReportingPeriod.through_date.desc()
+        )
+    ):
+        periods.setdefault(per.property_id, per)
 
     out = []
     for p in props:
@@ -352,6 +379,18 @@ def dashboard(actor: Actor = Depends(current_actor), db: Session = Depends(get_s
                 "unapproved_rules": unapproved_rules.get(p.id, 0),
                 "tenants_missing_area": no_area.get(p.id, 0),
                 "open_exceptions": open_exc.get(p.id, {}),
+                "open_exception_types": sorted(open_types.get(p.id, []), key=_severity_order),
+                "period": (
+                    {
+                        "id": str(periods[p.id].id),
+                        "label": periods[p.id].label,
+                        "fiscal_year_start": str(periods[p.id].fiscal_year_start),
+                        "fiscal_year_end": str(periods[p.id].fiscal_year_end),
+                        "through_date": str(periods[p.id].through_date),
+                    }
+                    if p.id in periods
+                    else None
+                ),
                 "checks": checks,
                 "completeness": round(100 * sum(checks.values()) / len(checks)),
                 "ready": all(checks.values()),
@@ -368,3 +407,97 @@ def dashboard(actor: Actor = Depends(current_actor), db: Session = Depends(get_s
             }
         )
     return {"properties": out}
+
+
+# Activity ----------------------------------------------------------------------
+
+_DECISION_TEXT = {
+    "expense_mapping": "classified GL {target}",
+    "lease_rule": "{decision} lease rule",
+    "exception": "marked an exception {decision}",
+    "gl_transaction": "{decision}d a GL transaction",
+}
+
+
+@router.get("/activity")
+def activity(
+    limit: int = 30,
+    property_id: uuid.UUID | None = None,
+    actor: Actor = Depends(current_actor),
+    db: Session = Depends(get_session),
+):
+    """Recent events built only from stored records: audit runs, committed imports and reviewer
+    decisions. Nothing is synthesized."""
+    limit = max(1, min(limit, 100))
+    props = {p.id: p.name for p in db.scalars(scoped(M.Property, actor))}
+    users = {u.id: u.name for u in db.scalars(scoped(M.User, actor))}
+    rules = {str(r.id): r.ref for r in db.scalars(scoped(M.LeaseRule, actor))}
+
+    def scope(q, model):
+        return q.where(model.property_id == property_id) if property_id else q
+
+    events = []
+    for r in db.scalars(
+        scope(scoped(M.AuditRun, actor), M.AuditRun).order_by(M.AuditRun.created_at.desc()).limit(limit)
+    ):
+        s = r.summary or {}
+        events.append(
+            {
+                "kind": "audit_run",
+                "at": r.created_at.isoformat(),
+                "actor": users.get(r.created_by),
+                "property_id": str(r.property_id),
+                "property": props.get(r.property_id),
+                "title": "ran an audit",
+                "detail": f"{s.get('tenants_calculated', 0)} calculated, {s.get('tenants_unresolved', 0)} unresolved",
+                "ref": str(r.id),
+            }
+        )
+    for b in db.scalars(
+        scope(scoped(M.ImportBatch, actor), M.ImportBatch)
+        .where(M.ImportBatch.status.in_(["committed", "failed"]))
+        .order_by(M.ImportBatch.updated_at.desc())
+        .limit(limit)
+    ):
+        kind = {"gl": "general ledger", "billings": "billings", "lease_rules": "lease rules"}.get(b.kind, b.kind)
+        events.append(
+            {
+                "kind": "import" if b.status == "committed" else "import_failed",
+                "at": b.updated_at.isoformat(),
+                "actor": users.get(b.created_by),
+                "property_id": str(b.property_id),
+                "property": props.get(b.property_id),
+                "title": f"imported {kind}" if b.status == "committed" else f"{kind} import failed",
+                "detail": f"{b.accepted_count} rows, {len(b.rejected_rows or [])} rejected"
+                if b.status == "committed"
+                else "Nothing was written",
+                "ref": str(b.id),
+            }
+        )
+    for d in db.scalars(
+        scope(scoped(M.ReviewDecision, actor), M.ReviewDecision)
+        .where(M.ReviewDecision.decision != "assigned")
+        .order_by(M.ReviewDecision.created_at.desc())
+        .limit(limit)
+    ):
+        target = rules.get(d.target_id, d.target_id) if d.target_type == "lease_rule" else d.target_id
+        title = _DECISION_TEXT.get(d.target_type, "{decision}").format(
+            decision=d.decision.replace("_", " "), target=target
+        )
+        if d.target_type == "lease_rule":
+            title = f"{'approved' if d.decision == 'approve' else 'returned to draft'} lease rule {target}"
+        events.append(
+            {
+                "kind": d.target_type,
+                "at": d.created_at.isoformat(),
+                "actor": users.get(d.reviewer_id),
+                "property_id": str(d.property_id),
+                "property": props.get(d.property_id),
+                "title": title,
+                "detail": d.note,
+                "ref": d.target_id,
+                "decision": d.decision,
+            }
+        )
+    events.sort(key=lambda e: e["at"], reverse=True)
+    return events[:limit]
