@@ -67,3 +67,15 @@ Date: 2026-11-03. Baseline: `main` at `e728c7c` (v0.1 merged).
 - XSS: React escapes output. No `dangerouslySetInnerHTML`.
 - Import atomicity: a commit adds all rows in one transaction and commits once. A parse failure raises before any insert. Covered by a new test that forces a failure mid-commit.
 - Money types: no float conversion in the engine or API. The demo generator writes floats into XLSX on purpose to mimic Excel; the parser converts with `repr` and rejects more than 2 decimals.
+
+## Additional findings during v0.2 work
+
+| ID | Severity | Finding | Fix |
+| --- | --- | --- | --- |
+| F-25 | P0 (security) | `pnpm audit` on the v0.1 lockfile: Next.js 16.0.10 had 4 critical (including unauthenticated RCE in image optimization) and 15 high advisories; `postcss` and `sharp` had high advisories. | Next.js 16.4.2, overrides for `postcss` and `sharp`. `pnpm audit --prod` now reports none. |
+| F-26 | P2 (performance) | Measured with `scripts/bench.py`: 20,000-row GL commit 8.0 s, full report package 20.8 s. Causes: `DataFrame.iterrows`, per-row ORM objects, per-cell openpyxl style objects. | 2.3 s and 6.3 s. See `docs/ARCHITECTURE_V2.md`. |
+| F-27 | P1 (introduced and fixed in this branch) | The engine refactor dropped a guard, so a rule pool with no eligible transactions raised `KeyError`. Found by the Hypothesis property test before commit. | Guard restored; `test_rule_pool_with_no_transactions_allocates_zero`. |
+
+## Status
+
+All findings F-01 to F-27 are fixed on this branch, each with a test or a measured result, except where the fix is documentation-only (F-16 to F-24 are UI and maintainability work covered by component and e2e tests). Remaining risks are listed in `docs/SECURITY_REVIEW.md` (open items) and `docs/CALCULATION_ENGINE.md` (known limitations).

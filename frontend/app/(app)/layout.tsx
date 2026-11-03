@@ -99,91 +99,95 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <aside
           aria-label="Primary"
           className={cn(
-            "fixed inset-y-0 left-0 z-[var(--z-sidebar)] flex shrink-0 flex-col bg-nav text-nav-ink transition-[width,transform] duration-[var(--dur-base)] ease-[var(--ease)] md:sticky md:top-0 md:h-screen",
+            "fixed inset-y-0 left-0 z-[var(--z-sidebar)] flex shrink-0 flex-col bg-nav text-nav-ink transition-[width,transform] duration-[var(--dur-base)] ease-[var(--ease)] md:static md:self-stretch",
             narrow ? "w-[var(--sidebar-w-collapsed)]" : "w-[var(--sidebar-w)]",
             mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           )}
         >
-          <div className={cn("flex h-[var(--topbar-h)] items-center gap-2 border-b border-white/5 px-4", narrow && "justify-center px-0")}>
-            <div className="flex size-7 items-center justify-center rounded-md bg-[#5fb3d6] text-sm font-bold text-nav" aria-hidden>
-              V
-            </div>
-            {!narrow && (
-              <div className="leading-tight">
-                <div className="text-sm font-semibold tracking-tight text-white">Veyra</div>
-                <div className="text-2xs text-nav-muted">CAM pre-close audit</div>
-              </div>
-            )}
-          </div>
-
-          <div className={cn("px-3 pt-3", narrow && "px-2")}>
-            <Menu>
-              <MenuTrigger asChild>
-                <button
-                  aria-label="Switch property"
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-md border border-white/10 bg-nav-2 px-2.5 py-1.5 text-left text-sm hover:bg-nav-3",
-                    narrow && "justify-center px-0",
-                  )}
-                >
-                  <Building2 className="size-4 shrink-0 text-nav-muted" aria-hidden />
-                  {!narrow && (
-                    <>
-                      <span className="min-w-0 flex-1 truncate">{current?.name ?? "Select property"}</span>
-                      <ChevronsUpDown className="size-3.5 text-nav-muted" aria-hidden />
-                    </>
-                  )}
-                </button>
-              </MenuTrigger>
-              <MenuContent align="start" className="w-64">
-                <MenuLabel>Properties</MenuLabel>
-                {(props.data ?? []).map((p) => (
-                  <MenuItem key={p.id} onSelect={() => router.push(`/properties/${p.id}`)}>
-                    <Building2 />
-                    <span className="flex-1 truncate">{p.name}</span>
-                    {p.id === current?.id && <Check className="!text-accent" />}
-                  </MenuItem>
-                ))}
-                <MenuSeparator />
-                <MenuItem onSelect={() => router.push("/properties?new=1")}>
-                  <Plus />
-                  New property
-                </MenuItem>
-              </MenuContent>
-            </Menu>
-          </div>
-
-          <nav className={cn("flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-3", narrow && "px-2")}>
-            {GLOBAL_NAV.map((n) => link(n.href, n.label, n.icon, path === n.href))}
-            {current && (
-              <>
-                {!narrow && (
-                  <div className="mb-1 mt-4 truncate px-2.5 text-2xs font-semibold uppercase tracking-wider text-nav-muted">
-                    {current.name}
-                  </div>
-                )}
-                {narrow && <div className="my-2 h-px bg-white/10" />}
-                {PROPERTY_NAV.map((n) => {
-                  const href = `/properties/${current.id}${n.slug ? `/${n.slug}` : ""}`;
-                  const active = n.slug ? path.startsWith(href) : path === href;
-                  return link(href, n.label, n.icon, active);
-                })}
-              </>
-            )}
-          </nav>
-
-          <div className={cn("border-t border-white/5 p-3", narrow && "px-2")}>
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              className={cn(
-                "hidden h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-sm text-nav-muted hover:bg-nav-2 hover:text-nav-ink md:flex",
-                narrow && "justify-center px-0",
-              )}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          <div className="flex h-full flex-col md:sticky md:top-0 md:h-screen">
+            <div
+              className={cn("flex h-[var(--topbar-h)] items-center gap-2 border-b border-white/5 px-4", narrow && "justify-center px-0")}
             >
-              {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-              {!narrow && <span>Collapse</span>}
-            </button>
+              <div className="flex size-7 items-center justify-center rounded-md bg-[#5fb3d6] text-sm font-bold text-nav" aria-hidden>
+                V
+              </div>
+              {!narrow && (
+                <div className="leading-tight">
+                  <div className="text-sm font-semibold tracking-tight text-white">Veyra</div>
+                  <div className="text-2xs text-nav-muted">CAM pre-close audit</div>
+                </div>
+              )}
+            </div>
+
+            <div className={cn("px-3 pt-3", narrow && "px-2")}>
+              <Menu>
+                <MenuTrigger asChild>
+                  <button
+                    aria-label="Switch property"
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-md border border-white/10 bg-nav-2 px-2.5 py-1.5 text-left text-sm hover:bg-nav-3",
+                      narrow && "justify-center px-0",
+                    )}
+                  >
+                    <Building2 className="size-4 shrink-0 text-nav-muted" aria-hidden />
+                    {!narrow && (
+                      <>
+                        <span className="min-w-0 flex-1 truncate">{current?.name ?? "Select property"}</span>
+                        <ChevronsUpDown className="size-3.5 text-nav-muted" aria-hidden />
+                      </>
+                    )}
+                  </button>
+                </MenuTrigger>
+                <MenuContent align="start" className="w-64">
+                  <MenuLabel>Properties</MenuLabel>
+                  {(props.data ?? []).map((p) => (
+                    <MenuItem key={p.id} onSelect={() => router.push(`/properties/${p.id}`)}>
+                      <Building2 />
+                      <span className="flex-1 truncate">{p.name}</span>
+                      {p.id === current?.id && <Check className="!text-accent" />}
+                    </MenuItem>
+                  ))}
+                  <MenuSeparator />
+                  <MenuItem onSelect={() => router.push("/properties?new=1")}>
+                    <Plus />
+                    New property
+                  </MenuItem>
+                </MenuContent>
+              </Menu>
+            </div>
+
+            <nav className={cn("flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-3", narrow && "px-2")}>
+              {GLOBAL_NAV.map((n) => link(n.href, n.label, n.icon, path === n.href))}
+              {current && (
+                <>
+                  {!narrow && (
+                    <div className="mb-1 mt-4 truncate px-2.5 text-2xs font-semibold uppercase tracking-wider text-nav-muted">
+                      {current.name}
+                    </div>
+                  )}
+                  {narrow && <div className="my-2 h-px bg-white/10" />}
+                  {PROPERTY_NAV.map((n) => {
+                    const href = `/properties/${current.id}${n.slug ? `/${n.slug}` : ""}`;
+                    const active = n.slug ? path.startsWith(href) : path === href;
+                    return link(href, n.label, n.icon, active);
+                  })}
+                </>
+              )}
+            </nav>
+
+            <div className={cn("border-t border-white/5 p-3", narrow && "px-2")}>
+              <button
+                onClick={() => setCollapsed(!collapsed)}
+                className={cn(
+                  "hidden h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-sm text-nav-muted hover:bg-nav-2 hover:text-nav-ink md:flex",
+                  narrow && "justify-center px-0",
+                )}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+                {!narrow && <span>Collapse</span>}
+              </button>
+            </div>
           </div>
         </aside>
 

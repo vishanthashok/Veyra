@@ -358,7 +358,7 @@ function AccountDetail({
           }
           description={
             <>
-              {acct.transaction_count} transactions · YTD {money(acct.total)}
+              {acct.transaction_count} transaction{acct.transaction_count === 1 ? "" : "s"} · YTD {money(acct.total)}
               {acct.excluded_count ? ` · ${acct.excluded_count} excluded by reviewer` : ""}
             </>
           }

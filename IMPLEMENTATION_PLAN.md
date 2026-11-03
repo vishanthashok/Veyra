@@ -1,3 +1,5 @@
+> v0.1 document, kept for history. The current version is [docs/ENGINEERING_AUDIT.md](docs/ENGINEERING_AUDIT.md).
+
 # Implementation plan and status
 
 Date: 2026-11-03. Product: CAM pre-close audit for calendar-year 2026 books, sold before those books close.

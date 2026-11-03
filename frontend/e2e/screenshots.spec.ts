@@ -55,7 +55,7 @@ test("capture screens", async ({ page, browser }) => {
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
   await mobile.context().addCookies(await page.context().cookies());
   await mobile.goto(`${base}/audit`);
-  await expect(mobile.getByText("Tenant reconciliation")).toBeVisible();
+  await expect(mobile.getByRole("heading", { name: "Tenant reconciliation" })).toBeVisible();
   await mobile.waitForTimeout(500);
   expect(await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await mobile.screenshot({ path: `${OUT}/15-mobile-audit.png`, fullPage: true });

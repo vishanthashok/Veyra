@@ -1,4 +1,4 @@
-.PHONY: setup test test-engine migrate demo api web up
+.PHONY: setup test test-engine migrate demo api web up e2e screenshots
 
 setup:
 	cd backend && uv sync
@@ -9,8 +9,14 @@ test-engine:
 
 # API tests need VEYRA_TEST_DATABASE_URL pointing at a database they may wipe.
 test:
-	cd backend && uv run pytest -q
-	cd frontend && pnpm lint && pnpm build
+	cd backend && uv run ruff check . && uv run mypy && uv run pytest -q
+	cd frontend && pnpm lint && pnpm typecheck && pnpm test && pnpm build
+
+e2e:
+	cd frontend && pnpm e2e
+
+screenshots:
+	cd frontend && SCREENSHOTS=1 pnpm e2e e2e/screenshots.spec.ts
 
 migrate:
 	cd backend && uv run alembic upgrade head

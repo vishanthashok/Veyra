@@ -1,3 +1,5 @@
+> v0.1 document, kept for history. The current version is [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md).
+
 # Security status
 
 Veyra v0.1 is a local-first MVP. It is not production-secure. Use synthetic data only until the items under "Required before real customer data" are done.
