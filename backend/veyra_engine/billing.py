@@ -24,28 +24,44 @@ def billed_in_period(inp: AuditInput) -> tuple[dict[str, Decimal], set[str]]:
     return billed, seen
 
 
-def compare(r: TenantResult, tenant: Tenant, inp: AuditInput, billed: dict[str, Decimal],
-            seen: set[str]) -> list[AuditException]:
+def compare(
+    r: TenantResult, tenant: Tenant, inp: AuditInput, billed: dict[str, Decimal], seen: set[str]
+) -> list[AuditException]:
     if r.status != "calculated" or r.total is None:
         return []
     p = inp.period
     out: list[AuditException] = []
     occupied = occupied_days(tenant, p.fiscal_year_start, p.through_date) > 0
     if tenant.id not in seen and occupied:
-        out.append(AuditException(
-            ET.MISSING_BILLINGS, Severity.WARNING,
-            f"No CAM billings found for {tenant.name} in the period. Variance not computed.",
-            tenant_id=tenant.id))
+        out.append(
+            AuditException(
+                ET.MISSING_BILLINGS,
+                Severity.WARNING,
+                f"No CAM billings found for {tenant.name} in the period. Variance not computed.",
+                tenant_id=tenant.id,
+            )
+        )
         r.billed = None
         return out
     r.billed = billed[tenant.id]
     r.variance = r.total - r.billed
-    r.trace.append(TraceStep("Provisional variance", "total - billed_ytd", fmt(r.variance),
-                             {"total": fmt(r.total), "billed_ytd": fmt(r.billed)}))
+    r.trace.append(
+        TraceStep(
+            "Provisional variance",
+            "total - billed_ytd",
+            fmt(r.variance),
+            {"total": fmt(r.total), "billed_ytd": fmt(r.billed)},
+        )
+    )
     if abs(r.variance) > inp.variance_threshold:
-        out.append(AuditException(
-            ET.VARIANCE_OVER_THRESHOLD, Severity.INFO,
-            f"Provisional variance for {tenant.name} is {r.variance}. "
-            "Potential discrepancy only. Verify before acting.",
-            tenant_id=tenant.id, amount=r.variance))
+        out.append(
+            AuditException(
+                ET.VARIANCE_OVER_THRESHOLD,
+                Severity.INFO,
+                f"Provisional variance for {tenant.name} is {r.variance}. "
+                "Potential discrepancy only. Verify before acting.",
+                tenant_id=tenant.id,
+                amount=r.variance,
+            )
+        )
     return out

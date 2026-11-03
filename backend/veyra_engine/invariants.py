@@ -76,11 +76,10 @@ def check(inp: AuditInput, out: AuditOutput) -> None:
             excluded_cats = set(pr.excluded_categories)
             pool_cats = set(out.pools[ln.pool].by_category) if ln.pool in out.pools else set()
             if excluded_cats & pool_cats and pr.gross_up is None:
-                allowed = sum((a for c, a in out.pools[ln.pool].by_category.items()
-                               if c not in excluded_cats), ZERO)
+                allowed = sum((a for c, a in out.pools[ln.pool].by_category.items() if c not in excluded_cats), ZERO)
                 if ln.tenant_pool_amount != allowed:
                     errors.append(f"tenant {r.tenant_id} pool {ln.pool} includes excluded categories")
-        if r.variance is not None and r.billed is not None and r.variance != r.total - r.billed:
+        if r.variance is not None and r.billed is not None and r.total is not None and r.variance != r.total - r.billed:
             errors.append(f"tenant {r.tenant_id} variance does not equal total minus billed")
 
     if errors:

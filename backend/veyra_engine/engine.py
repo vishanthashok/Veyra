@@ -33,9 +33,15 @@ ONE = Decimal("1")
 def run_audit(inp: AuditInput, *, check_invariants: bool = True) -> AuditOutput:
     p = inp.period
     if not period_is_valid(inp):
-        return AuditOutput(True, p, {}, [], [AuditException(
-            ET.INVALID_PERIOD, Severity.ERROR, "Through date must fall inside the fiscal year.")],
-            [], {})
+        return AuditOutput(
+            True,
+            p,
+            {},
+            [],
+            [AuditException(ET.INVALID_PERIOD, Severity.ERROR, "Through date must fall inside the fiscal year.")],
+            [],
+            {},
+        )
 
     elig = classify_transactions(inp)
     exceptions = list(elig.exceptions)
@@ -50,17 +56,20 @@ def run_audit(inp: AuditInput, *, check_invariants: bool = True) -> AuditOutput:
     pool_shares: dict[str, Decimal] = defaultdict(lambda: ZERO)
     pool_unrounded: dict[str, Decimal] = defaultdict(lambda: ZERO)
     for tenant in inp.tenants:
-        r = calc_tenant(tenant, inp, pools, categories, year_fraction, exceptions,
-                        pool_shares, pool_unrounded)
+        r = calc_tenant(tenant, inp, pools, categories, year_fraction, exceptions, pool_shares, pool_unrounded)
         exceptions += billing.compare(r, tenant, inp, billed, seen)
         results.append(r)
 
     for pool, total_share in pool_shares.items():
         if total_share > ONE:
-            exceptions.append(AuditException(
-                ET.SHARES_EXCEED_100, Severity.WARNING,
-                f"Tenant shares in pool {pool} sum to {total_share}. Confirm lease denominators.",
-                pool=pool))
+            exceptions.append(
+                AuditException(
+                    ET.SHARES_EXCEED_100,
+                    Severity.WARNING,
+                    f"Tenant shares in pool {pool} sum to {total_share}. Confirm lease denominators.",
+                    pool=pool,
+                )
+            )
     for r in results:
         for line in r.lines:
             if line.pool in pools:  # a rule pool with no eligible transactions has no summary
@@ -69,15 +78,25 @@ def run_audit(inp: AuditInput, *, check_invariants: bool = True) -> AuditOutput:
         diff = ps.allocated_total - cents(pool_unrounded[pool])
         ps.rounding_difference = diff
         if diff != ZERO:
-            exceptions.append(AuditException(
-                ET.ROUNDING_DIFFERENCE, Severity.INFO,
-                f"Rounded tenant lines in pool {pool} differ from unrounded total by {diff}. "
-                "No plug applied.", pool=pool, amount=diff))
+            exceptions.append(
+                AuditException(
+                    ET.ROUNDING_DIFFERENCE,
+                    Severity.INFO,
+                    f"Rounded tenant lines in pool {pool} differ from unrounded total by {diff}. No plug applied.",
+                    pool=pool,
+                    amount=diff,
+                )
+            )
 
     out = AuditOutput(
         provisional=True,  # the engine never produces a final reconciliation
-        period=p, pools=pools, tenants=results, exceptions=exceptions,
-        included_transaction_ids=[t.id for t, _ in elig.included], excluded=dict(elig.excluded))
+        period=p,
+        pools=pools,
+        tenants=results,
+        exceptions=exceptions,
+        included_transaction_ids=[t.id for t, _ in elig.included],
+        excluded=dict(elig.excluded),
+    )
     if check_invariants:
         invariants.check(inp, out)
     return out

@@ -32,8 +32,9 @@ def verify_password(hash_: str, pw: str) -> bool:
         return False
 
 
-def make_session_token(user_id: uuid.UUID) -> str:
-    return _signer.dumps(str(user_id))
+def make_session_token(user: User) -> str:
+    """Token carries the user's session_version. Logout increments it, revoking all tokens (F-07)."""
+    return _signer.dumps({"uid": str(user.id), "sv": user.session_version})
 
 
 @dataclass(frozen=True)
@@ -49,10 +50,12 @@ def current_actor(request: Request, db: Session = Depends(get_session)) -> Actor
     if not token:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not signed in")
     try:
-        uid = uuid.UUID(_signer.loads(token, max_age=settings.session_max_age_seconds))
-    except (BadSignature, SignatureExpired, ValueError):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Session expired")
+        data = _signer.loads(token, max_age=settings.session_max_age_seconds)
+        uid = uuid.UUID(data["uid"])
+        sv = int(data["sv"])
+    except (BadSignature, SignatureExpired, ValueError, KeyError, TypeError):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Session expired. Sign in again.") from None
     user = db.get(User, uid)
-    if user is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Unknown user")
+    if user is None or user.session_version != sv:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Session expired. Sign in again.")
     return Actor(user.id, user.organization_id, user.email, user.name)

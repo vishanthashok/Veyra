@@ -17,17 +17,23 @@ def _norm(text: str) -> str:
 
 def duplicate_candidates(included: list[tuple[Transaction, Category]]) -> list[AuditException]:
     """Same account, date, amount and normalized description. Flagged, never removed."""
-    groups: dict[tuple, list[Transaction]] = defaultdict(list)
+    groups: dict[tuple[str, object, Decimal, str], list[Transaction]] = defaultdict(list)
     for t, _ in included:
         groups[(t.gl_account, t.txn_date, t.amount, _norm(t.description))].append(t)
     out = []
     for (acct, d, amt, _), txns in groups.items():
         if len(txns) > 1:
-            out.append(AuditException(
-                ET.DUPLICATE_GL_CANDIDATE, Severity.WARNING,
-                f"{len(txns)} transactions in {acct} on {d} for {amt} with the same description. "
-                "Still included. Exclude the duplicate if confirmed.",
-                gl_account=acct, transaction_ids=tuple(x.id for x in txns), amount=amt))
+            out.append(
+                AuditException(
+                    ET.DUPLICATE_GL_CANDIDATE,
+                    Severity.WARNING,
+                    f"{len(txns)} transactions in {acct} on {d} for {amt} with the same description. "
+                    "Still included. Exclude the duplicate if confirmed.",
+                    gl_account=acct,
+                    transaction_ids=tuple(x.id for x in txns),
+                    amount=amt,
+                )
+            )
     return out
 
 

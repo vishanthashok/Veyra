@@ -5,4 +5,4 @@ from .invariants import InvariantViolation
 from .money import D, cents
 from .version import ENGINE_VERSION, ROUNDING_POLICY
 
-__all__ = ["run_audit", "InvariantViolation", "D", "cents", "ENGINE_VERSION", "ROUNDING_POLICY"]
+__all__ = ["ENGINE_VERSION", "ROUNDING_POLICY", "D", "InvariantViolation", "cents", "run_audit"]

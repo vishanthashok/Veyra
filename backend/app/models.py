@@ -7,8 +7,19 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
-    JSON, Boolean, Date, DateTime, ForeignKey, Integer, LargeBinary, Numeric, String, Text,
-    UniqueConstraint, func,
+    JSON,
+    Boolean,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    LargeBinary,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -25,12 +36,12 @@ class Timestamps:
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
 
 class OrgOwned(Timestamps):
-    organization_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("organizations.id", ondelete="CASCADE"), index=True)
+    organization_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("organizations.id", ondelete="CASCADE"), index=True)
 
 
 class Organization(Timestamps, Base):
@@ -43,6 +54,7 @@ class User(OrgOwned, Base):
     email: Mapped[str] = mapped_column(String(320), unique=True)
     name: Mapped[str] = mapped_column(String(200))
     password_hash: Mapped[str] = mapped_column(String(300))
+    session_version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
 
 class Property(OrgOwned, Base):
@@ -71,6 +83,7 @@ class LeaseRule(OrgOwned, Base):
     property_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("properties.id", ondelete="CASCADE"), index=True)
     ref: Mapped[str] = mapped_column(String(100))
     status: Mapped[str] = mapped_column(String(20), default="draft")  # draft | approved
+    version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     admin_fee_pct: Mapped[Decimal | None] = mapped_column(Share, nullable=True)
     admin_fee_pools: Mapped[list] = mapped_column(JSON, default=list)
     admin_fee_order: Mapped[str | None] = mapped_column(String(20), nullable=True)
@@ -83,6 +96,7 @@ class LeaseRule(OrgOwned, Base):
 
 class AllocationRule(OrgOwned, Base):
     """One pool a lease rule participates in, with its method and adjustments."""
+
     __tablename__ = "allocation_rules"
     __table_args__ = (UniqueConstraint("lease_rule_id", "pool"),)
     lease_rule_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("lease_rules.id", ondelete="CASCADE"), index=True)
@@ -110,11 +124,13 @@ class Tenant(OrgOwned, Base):
     lease_end: Mapped[date | None] = mapped_column(Date, nullable=True)
     allocation_method: Mapped[str] = mapped_column(String(20), default="pro_rata")
     lease_rule_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("lease_rules.id", ondelete="SET NULL"), nullable=True)
+        ForeignKey("lease_rules.id", ondelete="SET NULL"), nullable=True
+    )
 
 
 class Lease(OrgOwned, Base):
     """Lease document record. Stores the original file reference, never a rewritten copy."""
+
     __tablename__ = "leases"
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"), index=True)
     lease_ref: Mapped[str] = mapped_column(String(100), default="")
@@ -134,6 +150,7 @@ class ExpenseCategory(OrgOwned, Base):
 
 class SourceFile(OrgOwned, Base):
     """Original uploaded bytes. Immutable. Never overwritten."""
+
     __tablename__ = "source_files"
     filename: Mapped[str] = mapped_column(String(300))
     content_type: Mapped[str] = mapped_column(String(100))
@@ -145,9 +162,12 @@ class SourceFile(OrgOwned, Base):
 
 class ImportBatch(OrgOwned, Base):
     __tablename__ = "import_batches"
+    __table_args__ = (UniqueConstraint("organization_id", "idempotency_key", name="uq_import_batches_org_idem"),)
     property_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("properties.id", ondelete="CASCADE"), index=True)
     kind: Mapped[str] = mapped_column(String(20))  # gl | billings
-    status: Mapped[str] = mapped_column(String(20), default="uploaded")  # uploaded | committed
+    status: Mapped[str] = mapped_column(String(20), default="uploaded")  # uploaded | committed | failed
+    parser_version: Mapped[str] = mapped_column(String(20), default="1", server_default="1")
+    idempotency_key: Mapped[str | None] = mapped_column(String(200), nullable=True)
     source_file_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("source_files.id"))
     column_map: Mapped[dict] = mapped_column(JSON, default=dict)
     row_count: Mapped[int] = mapped_column(Integer, default=0)
@@ -158,6 +178,7 @@ class ImportBatch(OrgOwned, Base):
 
 class GLTransaction(OrgOwned, Base):
     __tablename__ = "gl_transactions"
+    __table_args__ = (Index("ix_gl_transactions_property_account_date", "property_id", "gl_account", "txn_date"),)
     property_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("properties.id", ondelete="CASCADE"), index=True)
     import_batch_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("import_batches.id", ondelete="CASCADE"), index=True)
     source_row: Mapped[int] = mapped_column(Integer)
@@ -177,6 +198,7 @@ class ExpenseMapping(OrgOwned, Base):
     gl_account: Mapped[str] = mapped_column(String(50))
     category_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="needs_review")
+    version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     reviewer_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     explanation: Mapped[str] = mapped_column(Text, default="")
@@ -186,7 +208,7 @@ class ExpenseMapping(OrgOwned, Base):
 class CamBilling(OrgOwned, Base):
     __tablename__ = "cam_billings"
     property_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("properties.id", ondelete="CASCADE"), index=True)
-    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"), index=True)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id", ondelete="RESTRICT"), index=True)
     import_batch_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("import_batches.id", ondelete="CASCADE"))
     source_row: Mapped[int] = mapped_column(Integer)
     bill_date: Mapped[date] = mapped_column(Date)
@@ -196,11 +218,18 @@ class CamBilling(OrgOwned, Base):
 
 class AuditRun(OrgOwned, Base):
     __tablename__ = "audit_runs"
+    __table_args__ = (
+        UniqueConstraint("organization_id", "idempotency_key", name="uq_audit_runs_org_idem"),
+        Index("ix_audit_runs_property_created", "property_id", "created_at"),
+    )
     property_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("properties.id", ondelete="CASCADE"), index=True)
     period_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("reporting_periods.id", ondelete="CASCADE"))
     status: Mapped[str] = mapped_column(String(20), default="completed")
     provisional: Mapped[bool] = mapped_column(Boolean, default=True)
     input_hash: Mapped[str] = mapped_column(String(64))
+    engine_version: Mapped[str] = mapped_column(String(20), default="0.1.0", server_default="0.1.0")
+    snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # immutable normalized inputs
+    idempotency_key: Mapped[str | None] = mapped_column(String(200), nullable=True)
     summary: Mapped[dict] = mapped_column(JSON, default=dict)
     created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
@@ -208,7 +237,7 @@ class AuditRun(OrgOwned, Base):
 class AuditResult(OrgOwned, Base):
     __tablename__ = "audit_results"
     audit_run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("audit_runs.id", ondelete="CASCADE"), index=True)
-    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id", ondelete="RESTRICT"))
     status: Mapped[str] = mapped_column(String(20))
     total: Mapped[Decimal | None] = mapped_column(Money, nullable=True)
     admin_fee: Mapped[Decimal] = mapped_column(Money, default=Decimal("0"))
@@ -231,17 +260,20 @@ class AuditExceptionRow(OrgOwned, Base):
     type: Mapped[str] = mapped_column(String(50))
     severity: Mapped[str] = mapped_column(String(10))
     message: Mapped[str] = mapped_column(Text)
-    tenant_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=True)
     gl_account: Mapped[str | None] = mapped_column(String(50), nullable=True)
     pool: Mapped[str | None] = mapped_column(String(50), nullable=True)
     transaction_ids: Mapped[list] = mapped_column(JSON, default=list)
     amount: Mapped[Decimal | None] = mapped_column(Money, nullable=True)
-    status: Mapped[str] = mapped_column(String(20), default="open")  # open | resolved | accepted
+    # open | in_review | resolved | accepted | reopened
+    status: Mapped[str] = mapped_column(String(20), default="open")
     resolution_note: Mapped[str] = mapped_column(Text, default="")
+    assigned_to: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
 
 class ReviewDecision(OrgOwned, Base):
     __tablename__ = "review_decisions"
+    __table_args__ = (Index("ix_review_decisions_target", "target_type", "target_id"),)
     property_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("properties.id", ondelete="CASCADE"), index=True)
     target_type: Mapped[str] = mapped_column(String(50))  # expense_mapping | lease_rule | exception | gl_transaction
     target_id: Mapped[str] = mapped_column(String(100))
@@ -252,6 +284,7 @@ class ReviewDecision(OrgOwned, Base):
 
 class AuditLog(OrgOwned, Base):
     """Append-only change log."""
+
     __tablename__ = "audit_log"
     actor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     action: Mapped[str] = mapped_column(String(50))

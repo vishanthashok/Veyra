@@ -168,8 +168,8 @@ class AuditInput:
 class TraceStep:
     label: str
     formula: str
-    result: str
-    inputs: dict[str, str] = field(default_factory=dict)
+    result: str | None
+    inputs: dict[str, str | None] = field(default_factory=dict)
 
 
 @dataclass

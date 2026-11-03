@@ -42,10 +42,16 @@ def classify_transactions(inp: AuditInput) -> Eligibility:
             continue
         if not (p.fiscal_year_start <= t.txn_date <= p.through_date):
             out.excluded["outside_period"].append(t.id)
-            out.exceptions.append(AuditException(
-                ET.TRANSACTION_OUTSIDE_PERIOD, Severity.WARNING,
-                f"Transaction dated {t.txn_date} is outside {p.fiscal_year_start} to {p.through_date}.",
-                gl_account=t.gl_account, transaction_ids=(t.id,), amount=t.amount))
+            out.exceptions.append(
+                AuditException(
+                    ET.TRANSACTION_OUTSIDE_PERIOD,
+                    Severity.WARNING,
+                    f"Transaction dated {t.txn_date} is outside {p.fiscal_year_start} to {p.through_date}.",
+                    gl_account=t.gl_account,
+                    transaction_ids=(t.id,),
+                    amount=t.amount,
+                )
+            )
             continue
         m = mappings.get(t.gl_account)
         if m is None:
@@ -60,24 +66,40 @@ def classify_transactions(inp: AuditInput) -> Eligibility:
             out.excluded["needs_review"].append(t.id)
             continue
         if m.category not in categories:
-            out.exceptions.append(AuditException(
-                ET.UNKNOWN_CATEGORY, Severity.ERROR,
-                f"GL account {t.gl_account} maps to unknown category {m.category!r}.",
-                gl_account=t.gl_account, transaction_ids=(t.id,), amount=t.amount))
+            out.exceptions.append(
+                AuditException(
+                    ET.UNKNOWN_CATEGORY,
+                    Severity.ERROR,
+                    f"GL account {t.gl_account} maps to unknown category {m.category!r}.",
+                    gl_account=t.gl_account,
+                    transaction_ids=(t.id,),
+                    amount=t.amount,
+                )
+            )
             out.excluded["unknown_category"].append(t.id)
             continue
         out.included.append((t, categories[m.category]))
 
     for acct, txns in unmapped.items():
-        out.exceptions.append(AuditException(
-            ET.UNMAPPED_GL_ACCOUNT, Severity.WARNING,
-            f"GL account {acct} has no reviewed mapping. Excluded from all pools until mapped.",
-            gl_account=acct, transaction_ids=tuple(x.id for x in txns),
-            amount=sum((x.amount for x in txns), ZERO)))
+        out.exceptions.append(
+            AuditException(
+                ET.UNMAPPED_GL_ACCOUNT,
+                Severity.WARNING,
+                f"GL account {acct} has no reviewed mapping. Excluded from all pools until mapped.",
+                gl_account=acct,
+                transaction_ids=tuple(x.id for x in txns),
+                amount=sum((x.amount for x in txns), ZERO),
+            )
+        )
     for acct, txns in review.items():
-        out.exceptions.append(AuditException(
-            ET.MAPPING_NEEDS_REVIEW, Severity.WARNING,
-            f"GL account {acct} mapping is marked needs review. Excluded until a reviewer decides.",
-            gl_account=acct, transaction_ids=tuple(x.id for x in txns),
-            amount=sum((x.amount for x in txns), ZERO)))
+        out.exceptions.append(
+            AuditException(
+                ET.MAPPING_NEEDS_REVIEW,
+                Severity.WARNING,
+                f"GL account {acct} mapping is marked needs review. Excluded until a reviewer decides.",
+                gl_account=acct,
+                transaction_ids=tuple(x.id for x in txns),
+                amount=sum((x.amount for x in txns), ZERO),
+            )
+        )
     return out

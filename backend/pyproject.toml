@@ -32,3 +32,23 @@ dev = [
     "pytest>=9.2.0",
     "ruff>=0.17.3",
 ]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "BLE", "C4", "SIM", "RUF"]
+ignore = ["B008", "S101", "SIM108", "RUF001", "RUF002", "RUF003", "UP040", "UP046", "UP047"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "E501", "E402", "B", "SIM", "RUF059"]
+"app/demo_seed.py" = ["S"]
+"alembic/env.py" = ["E402"]
+
+[tool.mypy]
+python_version = "3.13"
+packages = ["veyra_engine"]
+strict = true
+warn_unused_ignores = false

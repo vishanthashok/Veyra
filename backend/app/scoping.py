@@ -12,6 +12,8 @@ from .models import AuditLog
 
 T = TypeVar("T")
 
+OPEN_STATUSES = ("open", "in_review", "reopened")
+
 
 def scoped(model, actor: Actor):
     return select(model).where(model.organization_id == actor.org_id)
@@ -26,9 +28,17 @@ def get_owned(db: Session, model: type[T], id_: uuid.UUID, actor: Actor) -> T:
 
 
 def log(db: Session, actor: Actor, action: str, entity, before=None, after=None):
-    db.add(AuditLog(organization_id=actor.org_id, actor_id=actor.user_id, action=action,
-                    entity_type=type(entity).__tablename__, entity_id=str(entity.id),
-                    before=before, after=after))
+    db.add(
+        AuditLog(
+            organization_id=actor.org_id,
+            actor_id=actor.user_id,
+            action=action,
+            entity_type=type(entity).__tablename__,
+            entity_id=str(entity.id),
+            before=before,
+            after=after,
+        )
+    )
 
 
 def snapshot(obj, fields) -> dict:
@@ -37,3 +47,14 @@ def snapshot(obj, fields) -> dict:
         v = getattr(obj, f)
         out[f] = v if isinstance(v, (str, int, bool, list, dict, type(None))) else str(v)
     return out
+
+
+def idempotency_key(raw: str | None) -> str | None:
+    if raw is None or raw == "":
+        return None
+    key = raw.strip()
+    if not (1 <= len(key) <= 200) or not key.isprintable():
+        from fastapi import HTTPException
+
+        raise HTTPException(422, "Idempotency-Key must be 1 to 200 printable characters.")
+    return key
