@@ -1,66 +1,62 @@
 @import "tailwindcss";
 
 /*
- * Veyra design tokens. Single source of truth for color, type, spacing, radius, shadow,
- * motion, density and layering. Components use these through Tailwind theme names
- * (bg-surface, text-muted, border-line, shadow-pop ...) or var(--token).
- * Contrast: every text/background pair below meets WCAG 2.2 AA (4.5:1) for body text.
- * See docs/DESIGN_SYSTEM.md.
+ * Veyra design tokens (v0.3). One source of truth for color, type, spacing, radius, shadow, motion,
+ * density and layering. Components consume them through Tailwind theme names (bg-surface,
+ * text-muted, border-line, shadow-pop) or var(--token). Every text/background pair used for text
+ * meets WCAG 2.2 AA (4.5:1). See docs/DESIGN_SYSTEM.md.
  */
 :root {
-  /* Neutrals: warm paper background, white surfaces */
-  --bg: #f6f5f2;
+  /* Neutrals */
+  --bg: #fafaf8;
   --surface: #ffffff;
-  --surface-2: #faf9f7;
-  --surface-3: #f1efeb;
-  --line: #e6e3dd;
-  --line-strong: #d3cfc7;
-  --ink: #16191f; /* 17.6:1 on surface */
-  --ink-2: #3f444c; /* 10.1:1 */
-  --muted: #646a73; /* 5.6:1 */
-  --subtle: #8a9099; /* decorative only, never body text */
+  --surface-2: #f5f5f2; /* hover, table header, subtle fills */
+  --surface-3: #eeeeea; /* pressed, skeleton, chips */
+  --line: #e9e8e4;
+  --line-strong: #d8d7d1;
+  --ink: #17191d; /* 17.3:1 on bg */
+  --ink-2: #3d414a; /* 10.3:1 */
+  --muted: #676c75; /* 5.2:1 on bg */
+  --subtle: #9a9ea6; /* icons, placeholders, never body text */
 
-  /* Navigation */
-  --nav: #0f1a2c;
-  --nav-2: #18263d;
-  --nav-3: #22324d;
-  --nav-ink: #e4e9f1; /* 14.2:1 on nav */
-  --nav-muted: #9aa7bb; /* 6.9:1 on nav */
+  /* Navigation: deep charcoal */
+  --nav: #121417;
+  --nav-2: #1b1e23;
+  --nav-3: #252930;
+  --nav-line: #23262c;
+  --nav-ink: #eceef2; /* 15.6:1 on nav */
+  --nav-muted: #8f96a3; /* 6.3:1 on nav */
 
-  /* Accent: restrained teal-blue */
-  --accent: #0b6e99; /* 5.4:1 on white */
-  --accent-hover: #095a7d;
-  --accent-soft: #e7f2f7;
+  /* Accent: refined teal, used only for primary actions, selection and focus */
+  --accent: #0d7a6a; /* 5.1:1 on white */
+  --accent-hover: #0a6457;
+  --accent-soft: #e8f3f0;
   --accent-ink: #ffffff;
-  --ring: rgb(11 110 153 / 0.35);
+  --ring: rgb(13 122 106 / 0.28);
 
-  /* Status (fg on bg is >= 4.5:1) */
-  --error: #b42318;
-  --error-bg: #fef3f2;
-  --error-line: #fecdca;
-  --warning: #93370d;
-  --warning-bg: #fffaeb;
-  --warning-line: #fedf89;
-  --success: #067647;
-  --success-bg: #ecfdf3;
-  --success-line: #abefc6;
-  --info: #175cd3;
-  --info-bg: #eff8ff;
-  --info-line: #b2ddff;
+  /* Status, restrained */
+  --error: #b3261e;
+  --error-bg: #fbefed;
+  --warning: #93560f;
+  --warning-bg: #fbf3e4;
+  --success: #2a7350;
+  --success-bg: #ecf5ef;
+  --info: #2e5aa3;
+  --info-bg: #eef2f9;
 
-  /* Money direction (used with text labels, never color alone) */
-  --under: #93370d; /* billed less than provisional share */
-  --over: #175cd3; /* billed more than provisional share */
+  /* Variance direction, always paired with a text label */
+  --under: #93560f;
+  --over: #2e5aa3;
 
   /* Radius */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  --radius-sm: 5px;
+  --radius-md: 7px;
+  --radius-lg: 10px;
 
   /* Shadow */
-  --shadow-xs: 0 1px 1px rgb(16 24 40 / 0.04);
-  --shadow-sm: 0 1px 2px rgb(16 24 40 / 0.06), 0 1px 1px rgb(16 24 40 / 0.03);
-  --shadow-pop: 0 8px 24px rgb(16 24 40 / 0.12), 0 2px 6px rgb(16 24 40 / 0.06);
+  --shadow-xs: 0 1px 0 rgb(23 25 29 / 0.03);
+  --shadow-sm: 0 1px 2px rgb(23 25 29 / 0.05), 0 0 0 1px rgb(23 25 29 / 0.02);
+  --shadow-pop: 0 12px 32px -8px rgb(23 25 29 / 0.18), 0 2px 6px rgb(23 25 29 / 0.06);
 
   /* Motion */
   --ease: cubic-bezier(0.2, 0, 0, 1);
@@ -68,21 +64,23 @@
   --dur-base: 180ms;
 
   /* Density */
-  --row-h: 36px;
-  --row-h-compact: 30px;
-  --cell-x: 12px;
+  --row-h: 40px;
+  --row-h-compact: 34px;
+  --cell-x: 14px;
 
   /* Layering */
   --z-sticky: 10;
+  --z-topbar: 20;
   --z-sidebar: 30;
   --z-popover: 40;
   --z-dialog: 50;
   --z-toast: 60;
 
   /* Layout */
-  --sidebar-w: 248px;
-  --sidebar-w-collapsed: 64px;
+  --sidebar-w: 232px;
+  --sidebar-w-collapsed: 60px;
   --topbar-h: 52px;
+  --content-max: 1360px;
 }
 
 @theme inline {
@@ -99,6 +97,7 @@
   --color-nav: var(--nav);
   --color-nav-2: var(--nav-2);
   --color-nav-3: var(--nav-3);
+  --color-nav-line: var(--nav-line);
   --color-nav-ink: var(--nav-ink);
   --color-nav-muted: var(--nav-muted);
   --color-accent: var(--accent);
@@ -107,16 +106,12 @@
   --color-accent-ink: var(--accent-ink);
   --color-error: var(--error);
   --color-error-bg: var(--error-bg);
-  --color-error-line: var(--error-line);
   --color-warning: var(--warning);
   --color-warning-bg: var(--warning-bg);
-  --color-warning-line: var(--warning-line);
   --color-success: var(--success);
   --color-success-bg: var(--success-bg);
-  --color-success-line: var(--success-line);
   --color-info: var(--info);
   --color-info-bg: var(--info-bg);
-  --color-info-line: var(--info-line);
   --color-under: var(--under);
   --color-over: var(--over);
 
@@ -127,10 +122,10 @@
   --shadow-sm: var(--shadow-sm);
   --shadow-pop: var(--shadow-pop);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-code), ui-monospace, monospace;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  /* Type scale (px / line-height) */
+  /* Type scale */
   --text-2xs: 11px;
   --text-2xs--line-height: 16px;
   --text-xs: 12px;
@@ -139,12 +134,14 @@
   --text-sm--line-height: 20px;
   --text-base: 14px;
   --text-base--line-height: 22px;
-  --text-lg: 16px;
+  --text-md: 15px;
+  --text-md--line-height: 22px;
+  --text-lg: 17px;
   --text-lg--line-height: 24px;
-  --text-xl: 20px;
+  --text-xl: 22px;
   --text-xl--line-height: 28px;
-  --text-2xl: 24px;
-  --text-2xl--line-height: 32px;
+  --text-2xl: 28px;
+  --text-2xl--line-height: 34px;
 }
 
 * {
@@ -160,12 +157,16 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 22px;
-  font-feature-settings: "cv11", "ss01";
+  font-size: 13px;
+  line-height: 20px;
+  font-feature-settings: "ss01", "cv11";
 }
 
-/* Financial numbers: tabular figures, right aligned */
+::selection {
+  background: var(--accent-soft);
+}
+
+/* Financial numbers: tabular figures, right aligned, never wrap */
 .num {
   font-variant-numeric: tabular-nums lining-nums;
   text-align: right;
@@ -198,7 +199,7 @@ body {
   }
 }
 .skeleton {
-  background: linear-gradient(90deg, var(--surface-3) 0px, #ebe8e3 80px, var(--surface-3) 160px);
+  background: linear-gradient(90deg, var(--surface-3) 0px, #e5e5e0 80px, var(--surface-3) 160px);
   background-size: 800px 100%;
   animation: veyra-shimmer 1.2s linear infinite;
   border-radius: var(--radius-sm);
@@ -214,7 +215,7 @@ body {
 }
 @keyframes veyra-slide-in {
   from {
-    transform: translateX(16px);
+    transform: translateX(12px);
     opacity: 0;
   }
   to {
@@ -224,7 +225,7 @@ body {
 }
 @keyframes veyra-pop-in {
   from {
-    transform: translateY(4px) scale(0.98);
+    transform: translateY(4px) scale(0.985);
     opacity: 0;
   }
   to {
@@ -240,4 +241,10 @@ body {
 }
 .anim-pop {
   animation: veyra-pop-in var(--dur-fast) var(--ease);
+}
+
+/* Thin, quiet scrollbars inside panels */
+.scroll-quiet {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
 }

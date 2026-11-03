@@ -284,6 +284,8 @@ export type DashboardRow = {
   unapproved_rules: number;
   tenants_missing_area: number;
   open_exceptions: Record<string, number>;
+  open_exception_types: { type: string; severity: "error" | "warning" | "info"; count: number }[];
+  period: { id: string; label: string; fiscal_year_start: string; fiscal_year_end: string; through_date: string } | null;
   checks: Record<string, boolean>;
   completeness: number;
   ready: boolean;
@@ -295,4 +297,16 @@ export type DashboardRow = {
     tenants_calculated: number;
     tenants_unresolved: number;
   } | null;
+};
+
+export type ActivityEvent = {
+  kind: string;
+  at: string;
+  actor: string | null;
+  property_id: string;
+  property: string | null;
+  title: string;
+  detail: string;
+  ref: string;
+  decision?: string;
 };
