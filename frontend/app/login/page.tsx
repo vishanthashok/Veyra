@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { BrandLogo } from "@/components/brand-logo";
 import { ErrorBox } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,8 +33,8 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardContent className="py-6">
           <div className="mb-6">
-            <div className="text-xl font-semibold tracking-tight">Veyra</div>
-            <p className="text-sm text-muted-foreground">CAM pre-close audit</p>
+            <h1><BrandLogo size={56} /></h1>
+            <p className="mt-2 text-sm text-muted-foreground">CAM pre-close audit</p>
           </div>
           <ErrorBox error={error} />
           <form onSubmit={submit} className="flex flex-col gap-3">
@@ -46,3 +47,4 @@ export default function LoginPage() {
     </main>
   );
 }
+

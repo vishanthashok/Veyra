@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: oklch(0.985 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: #FAFAF8;
+  --foreground: #111316;
   --card: oklch(1 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.5 0 0);
   --border: oklch(0.91 0 0);
-  --primary: oklch(0.32 0.06 250);
+  --primary: #137F73;
   --primary-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.55 0.2 27);
   --warning: oklch(0.75 0.15 75);
@@ -37,3 +37,42 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 .num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+/* A fixed charcoal sidebar keeps the mint mark legible in either theme. */
+.veyra-sidebar {
+  --card: #111316;
+  --foreground: #FAFAF8;
+  --muted: #262C2F;
+  --muted-foreground: #B5C1BE;
+  --border: #30383A;
+  background: var(--card);
+  color: var(--foreground);
+}
+.brand-logo { display: inline-flex; flex-shrink: 0; vertical-align: middle; }
+.brand-logo img { display: block; max-width: none; }
+.brand-logo-auto .brand-image-dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #111316;
+    --foreground: #FAFAF8;
+    --card: #1A1F22;
+    --muted: #262C2F;
+    --muted-foreground: #B5C1BE;
+    --border: #30383A;
+  }
+  :root:not([data-theme="light"]) .brand-logo-auto .brand-image-light { display: none; }
+  :root:not([data-theme="light"]) .brand-logo-auto .brand-image-dark { display: block; }
+}
+:root[data-theme="dark"], :root.dark {
+  --background: #111316;
+  --foreground: #FAFAF8;
+  --card: #1A1F22;
+  --muted: #262C2F;
+  --muted-foreground: #B5C1BE;
+  --border: #30383A;
+}
+:root[data-theme="dark"] .brand-logo-auto .brand-image-light,
+:root.dark .brand-logo-auto .brand-image-light { display: none; }
+:root[data-theme="dark"] .brand-logo-auto .brand-image-dark,
+:root.dark .brand-logo-auto .brand-image-dark { display: block; }
+
