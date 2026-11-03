@@ -78,9 +78,10 @@ def test_duplicate_gl_flagged_then_excluded(make):
 
 
 def test_missing_tenant_area(make):
-    r = only(out := make([txn(1, "6100", "100")], [tenant(area=None, rule=rule(prorata()))]))
+    r = only(out := make([txn(1, "6100", "100")],
+                         [tenant(area=None, rule=rule(prorata(), prorata("TAX")))]))
     assert r.status == "unresolved" and r.total is None
-    assert ET.MISSING_TENANT_AREA in types(out)
+    assert types(out).count(ET.MISSING_TENANT_AREA) == 1  # reported once, not per pool
 
 
 def test_missing_lease_rule(make):

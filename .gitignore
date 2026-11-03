@@ -10,3 +10,4 @@ backend/storage/
 *.log
 .pgdata/
 demo/output/
+.swarm/

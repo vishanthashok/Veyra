@@ -198,6 +198,8 @@ def run_audit(inp: AuditInput) -> AuditOutput:
 def _unresolved(r: TenantResult, exceptions, etype: ET, msg: str, pool: str | None = None):
     r.status = "unresolved"
     r.total = None
+    if msg in r.unresolved_reasons:  # same problem in several pools: report once
+        return
     r.unresolved_reasons.append(msg)
     exceptions.append(AuditException(etype, Severity.ERROR, msg, tenant_id=r.tenant_id, pool=pool))
 
@@ -279,7 +281,7 @@ def _calc_pool_line(tenant, pr: PoolRule, pools, categories, year_fraction, occ,
     if pr.method == Method.PRO_RATA:
         if tenant.rentable_area is None:
             _unresolved(r, exceptions, ET.MISSING_TENANT_AREA,
-                        f"{tenant.name} has no rentable area for pro-rata pool {pool}.", pool)
+                        f"{tenant.name} has no rentable area. Pro-rata pools cannot be allocated.")
             return None
         if pr.denominator_sqft is None or pr.denominator_sqft <= ZERO:
             _unresolved(r, exceptions, ET.MISSING_DENOMINATOR,
