@@ -1,0 +1,22 @@
+rule_ref,tenant,pool,method,denominator_sqft,fixed_pct,excluded_categories,base_year_amount,gross_up_target,gross_up_actual,cap_kind,cap_pct,cap_prior_year,admin_fee_pct,admin_fee_pools,admin_fee_order,unsupported_terms,source_ref
+LR-100,Lone Star Grocery Co.,CAM,fixed_pct,,0.30,,,,,,,,,,,,Lease s.6.2 (synthetic)
+LR-100,Lone Star Grocery Co.,TAX,pro_rata,60000,,,,,,,,,,,,,
+LR-100,Lone Star Grocery Co.,INS,pro_rata,60000,,,,,,,,,,,,,
+LR-110,Alamo Cellular,CAM,pro_rata,60000,,,70000.00,,,,,,,,,,Lease s.5.4 base year 2019 (synthetic)
+LR-110,Alamo Cellular,TAX,pro_rata,60000,,,,,,,,,,,,,
+LR-110,Alamo Cellular,INS,pro_rata,60000,,,,,,,,,,,,,
+LR-120,Bluebonnet Nail Spa,CAM,pro_rata,60000,,,,,,cpi,0.04,2100.00,,,,,Lease s.6.5 CPI cap (synthetic)
+LR-120,Bluebonnet Nail Spa,TAX,pro_rata,60000,,,,,,,,,,,,,
+LR-120,Bluebonnet Nail Spa,INS,pro_rata,60000,,,,,,,,,,,,,
+LR-130,Guadalupe Tax Services,CAM,pro_rata,60000,,,,,,noncumulative,0.05,3600.00,0.10,CAM,after_cap,,Lease s.6.4 and s.6.6 (synthetic)
+LR-130,Guadalupe Tax Services,TAX,pro_rata,60000,,,,,,,,,,,,,
+LR-130,Guadalupe Tax Services,INS,pro_rata,60000,,,,,,,,,,,,,
+LR-140,Hill Country Yoga,CAM,pro_rata,60000,,,,,,,,,,,,,
+LR-140,Hill Country Yoga,TAX,pro_rata,60000,,,,,,,,,,,,,
+LR-140,Hill Country Yoga,INS,pro_rata,60000,,,,,,,,,,,,,
+LR-150,Brazos Coffee Roasters,CAM,pro_rata,60000,,,,,,,,,,,,,
+LR-150,Brazos Coffee Roasters,TAX,pro_rata,60000,,,,,,,,,,,,,
+LR-150,Brazos Coffee Roasters,INS,pro_rata,60000,,,,,,,,,,,,,
+LR-170,Rio Grande Pizza,CAM,pro_rata,60000,,SECURITY,,0.95,0.88,,,,0.15,CAM,,,"Lease s.6.1, s.6.7 gross-up (synthetic)"
+LR-170,Rio Grande Pizza,TAX,pro_rata,60000,,,,,,,,,,,,,
+LR-170,Rio Grande Pizza,INS,pro_rata,60000,,,,,,,,,,,,,
