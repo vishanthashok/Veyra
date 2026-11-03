@@ -1,39 +1,243 @@
 @import "tailwindcss";
 
+/*
+ * Veyra design tokens. Single source of truth for color, type, spacing, radius, shadow,
+ * motion, density and layering. Components use these through Tailwind theme names
+ * (bg-surface, text-muted, border-line, shadow-pop ...) or var(--token).
+ * Contrast: every text/background pair below meets WCAG 2.2 AA (4.5:1) for body text.
+ * See docs/DESIGN_SYSTEM.md.
+ */
 :root {
-  --background: oklch(0.985 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.5 0 0);
-  --border: oklch(0.91 0 0);
-  --primary: oklch(0.32 0.06 250);
-  --primary-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.55 0.2 27);
-  --warning: oklch(0.75 0.15 75);
-  --success: oklch(0.55 0.13 150);
+  /* Neutrals: warm paper background, white surfaces */
+  --bg: #f6f5f2;
+  --surface: #ffffff;
+  --surface-2: #faf9f7;
+  --surface-3: #f1efeb;
+  --line: #e6e3dd;
+  --line-strong: #d3cfc7;
+  --ink: #16191f; /* 17.6:1 on surface */
+  --ink-2: #3f444c; /* 10.1:1 */
+  --muted: #646a73; /* 5.6:1 */
+  --subtle: #8a9099; /* decorative only, never body text */
+
+  /* Navigation */
+  --nav: #0f1a2c;
+  --nav-2: #18263d;
+  --nav-3: #22324d;
+  --nav-ink: #e4e9f1; /* 14.2:1 on nav */
+  --nav-muted: #9aa7bb; /* 6.9:1 on nav */
+
+  /* Accent: restrained teal-blue */
+  --accent: #0b6e99; /* 5.4:1 on white */
+  --accent-hover: #095a7d;
+  --accent-soft: #e7f2f7;
+  --accent-ink: #ffffff;
+  --ring: rgb(11 110 153 / 0.35);
+
+  /* Status (fg on bg is >= 4.5:1) */
+  --error: #b42318;
+  --error-bg: #fef3f2;
+  --error-line: #fecdca;
+  --warning: #93370d;
+  --warning-bg: #fffaeb;
+  --warning-line: #fedf89;
+  --success: #067647;
+  --success-bg: #ecfdf3;
+  --success-line: #abefc6;
+  --info: #175cd3;
+  --info-bg: #eff8ff;
+  --info-line: #b2ddff;
+
+  /* Money direction (used with text labels, never color alone) */
+  --under: #93370d; /* billed less than provisional share */
+  --over: #175cd3; /* billed more than provisional share */
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Shadow */
+  --shadow-xs: 0 1px 1px rgb(16 24 40 / 0.04);
+  --shadow-sm: 0 1px 2px rgb(16 24 40 / 0.06), 0 1px 1px rgb(16 24 40 / 0.03);
+  --shadow-pop: 0 8px 24px rgb(16 24 40 / 0.12), 0 2px 6px rgb(16 24 40 / 0.06);
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+
+  /* Density */
+  --row-h: 36px;
+  --row-h-compact: 30px;
+  --cell-x: 12px;
+
+  /* Layering */
+  --z-sticky: 10;
+  --z-sidebar: 30;
+  --z-popover: 40;
+  --z-dialog: 50;
+  --z-toast: 60;
+
+  /* Layout */
+  --sidebar-w: 248px;
+  --sidebar-w-collapsed: 64px;
+  --topbar-h: 52px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-destructive: var(--destructive);
+  --color-subtle: var(--subtle);
+  --color-nav: var(--nav);
+  --color-nav-2: var(--nav-2);
+  --color-nav-3: var(--nav-3);
+  --color-nav-ink: var(--nav-ink);
+  --color-nav-muted: var(--nav-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  --color-error-line: var(--error-line);
   --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-line: var(--warning-line);
   --color-success: var(--success);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-success-bg: var(--success-bg);
+  --color-success-line: var(--success-line);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-info-line: var(--info-line);
+  --color-under: var(--under);
+  --color-over: var(--over);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-pop: var(--shadow-pop);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-code), ui-monospace, monospace;
+
+  /* Type scale (px / line-height) */
+  --text-2xs: 11px;
+  --text-2xs--line-height: 16px;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 13px;
+  --text-sm--line-height: 20px;
+  --text-base: 14px;
+  --text-base--line-height: 22px;
+  --text-lg: 16px;
+  --text-lg--line-height: 24px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 32px;
 }
 
-* { border-color: var(--border); }
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+* {
+  border-color: var(--line);
 }
-.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 22px;
+  font-feature-settings: "cv11", "ss01";
+}
+
+/* Financial numbers: tabular figures, right aligned */
+.num {
+  font-variant-numeric: tabular-nums lining-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes veyra-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-3) 0px, #ebe8e3 80px, var(--surface-3) 160px);
+  background-size: 800px 100%;
+  animation: veyra-shimmer 1.2s linear infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes veyra-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes veyra-slide-in {
+  from {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes veyra-pop-in {
+  from {
+    transform: translateY(4px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.anim-fade {
+  animation: veyra-fade-in var(--dur-base) var(--ease);
+}
+.anim-slide {
+  animation: veyra-slide-in var(--dur-base) var(--ease);
+}
+.anim-pop {
+  animation: veyra-pop-in var(--dur-fast) var(--ease);
+}

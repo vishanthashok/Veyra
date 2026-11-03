@@ -6,7 +6,7 @@ CENT = Decimal("0.01")
 SHARE_Q = Decimal("0.00000001")
 
 
-def D(value) -> Decimal:
+def D(value: object) -> Decimal:
     """Convert to Decimal without passing through float."""
     if isinstance(value, Decimal):
         return value

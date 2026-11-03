@@ -3,9 +3,18 @@
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+T = TypeVar("T")
+
+
+class Page(BaseModel, Generic[T]):
+    items: list[T]
+    total: int
+    page: int
+    page_size: int
 
 
 class ORM(BaseModel):
@@ -120,6 +129,9 @@ class LeaseRuleOut(ORM):
     source_ref: str
     notes: str
     approved_at: datetime | None
+    version: int = 1
+    approved_by_name: str | None = None
+    tenants: list[str] = []
     pools: list[AllocationRuleOut] = []
 
 
@@ -135,10 +147,16 @@ class MappingIn(BaseModel):
         return v.strip()
 
 
+class BulkMappingIn(MappingIn):
+    gl_accounts: list[str] = Field(min_length=1, max_length=500)
+
+
 class GLAccountOut(BaseModel):
     gl_account: str
     account_name: str
     transaction_count: int
+    excluded_count: int = 0
+    version: int = 0
     total: Decimal
     mapping_id: uuid.UUID | None
     category_code: str | None
@@ -166,6 +184,8 @@ class ImportOut(ORM):
     id: uuid.UUID
     kind: str
     status: str
+    parser_version: str = "1"
+    sha256: str = ""
     row_count: int
     accepted_count: int
     rejected_rows: list
@@ -186,20 +206,29 @@ class ImportPreview(BaseModel):
 
 class CommitIn(BaseModel):
     column_map: dict[str, str]  # field -> source column
+    allow_duplicate_file: bool = False
 
 
 class CommitOut(BaseModel):
     batch: ImportOut
     warnings: list[str]
+    dry_run: bool = False
 
 
 class ReviewIn(BaseModel):
-    note: str = Field(min_length=1)
+    note: str = Field(min_length=3, max_length=2000)
+
+
+ExceptionStatus = Literal["open", "in_review", "resolved", "accepted", "reopened"]
 
 
 class ExceptionPatch(BaseModel):
-    status: Literal["open", "resolved", "accepted"]
-    note: str = Field(min_length=1)
+    status: ExceptionStatus
+    note: str = Field(min_length=3, max_length=2000)
+
+
+class ExceptionAssign(BaseModel):
+    user_id: uuid.UUID | None
 
 
 class AuditRunIn(BaseModel):

@@ -10,16 +10,16 @@ import pytest
 
 TEST_URL = os.environ.get("VEYRA_TEST_DATABASE_URL")
 if not TEST_URL:
-    pytest.skip("VEYRA_TEST_DATABASE_URL not set. API tests need PostgreSQL.",
-                allow_module_level=True)
+    pytest.skip("VEYRA_TEST_DATABASE_URL not set. API tests need PostgreSQL.", allow_module_level=True)
 os.environ["VEYRA_DATABASE_URL"] = TEST_URL
 
 
 @pytest.fixture(scope="session", autouse=True)
 def schema():
-    from alembic import command
     from alembic.config import Config
     from sqlalchemy import create_engine, text
+
+    from alembic import command
 
     eng = create_engine(TEST_URL)
     with eng.begin() as c:
@@ -40,6 +40,7 @@ def user_factory():
         email = f"user-{uuid.uuid4().hex[:8]}@test.local"
         ensure_demo_user(email=email, password="pw-test-123", org_name=f"Org {email}")
         return email, "pw-test-123"
+
     return make
 
 

@@ -1,3 +1,5 @@
+> v0.1 document, kept for history. The current version is [docs/ARCHITECTURE_V2.md](docs/ARCHITECTURE_V2.md).
+
 # Architecture
 
 ## Components

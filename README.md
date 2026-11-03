@@ -2,25 +2,20 @@
 
 Every expense accounted for. Every recovery explained.
 
-Veyra v0.1 is a CAM pre-close audit and reconciliation readiness tool for small commercial portfolios (2 to 15 properties, 20 to 150 tenants). It loads one property's year-to-date general ledger, tenant CAM billings and structured lease rules, computes provisional tenant allocations, flags missing data and potential discrepancies, and exports reviewable Excel workbooks.
+Veyra is a CAM pre-close audit and reconciliation-readiness tool for small commercial portfolios (2 to 15 properties, 20 to 150 tenants). It loads a property's year-to-date general ledger, tenant billings and structured lease rules, runs a deterministic calculation engine, flags missing data and potential discrepancies, and exports reviewable Excel workbooks.
 
-It is an accountant-review workflow. It does not interpret leases, does not produce a final year-end reconciliation, and does not claim that a variance is a billing error.
+It is an accountant-review workflow. It does not interpret leases, does not produce a final year-end reconciliation, and never presents a variance as a confirmed billing error.
 
-## What works today
+![Audit workspace](docs/screenshots/08-audit-workspace.png)
 
-| Area | Status |
-| --- | --- |
-| Properties, periods, tenants, expense categories | Working, audit logged |
-| CSV/XLSX import with preview, column mapping, row-level validation, duplicate flags, import history | Working, tested |
-| Reviewed GL mappings (recoverable, nonrecoverable, needs review) with reviewer, timestamp, explanation | Working, tested |
-| Lease rules: draft, approve, lock, return to draft; spreadsheet import | Working, tested |
-| Deterministic engine (Decimal money, traces, exceptions) | Working, 33 unit tests |
-| Audit runs, exceptions, review decisions, calculation traces | Working, tested |
-| Five Excel reports plus a combined package | Working, tested |
-| Synthetic demo checked against an independent expected-results workbook | Working, tested |
-| Web UI: dashboard, properties, tenants, import, mapping, lease rules, audit workspace, exceptions, reports | Working, browser-checked |
+## What v0.2 does
 
-Not built on purpose: AI lease reading, ERP integrations, tenant invoicing, portals, payments, final approval. See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+- **Imports** GL, billings and lease-rule spreadsheets through a wizard: upload, map columns, dry-run validation, confirm, results. Commits are atomic. Rejected rows are kept and downloadable. Re-importing an identical file needs confirmation.
+- **Expense mapping** in a master-detail review: every account starts as needs review; decisions need an explanation, are versioned and keep history; bulk decisions write one record per account.
+- **Lease rules** as structured, versioned terms with a deliberate approval checklist. Unsupported terms are flagged, never guessed.
+- **Audit runs** execute from an immutable snapshot of their inputs, record the engine version, and can be re-verified later. Every tenant figure opens an 11-step calculation inspector.
+- **Exceptions** form a review queue with assignee, lifecycle (open, in review, resolved, accepted, reopened) and history. Blocking errors cannot be resolved by hand.
+- **Reports**: six Excel workbooks with a cover sheet (run ID, engine version, input fingerprint, source files, assumptions, reviewer status), built only from the run's snapshot.
 
 ## Run it locally
 
@@ -31,6 +26,9 @@ With Docker:
 ```bash
 cp .env.example .env
 docker compose up --build
+```
+
+```bash
 docker compose exec api python -m app.demo_seed --reports
 ```
 
@@ -38,8 +36,17 @@ Without Docker:
 
 ```bash
 make setup
+```
+
+```bash
 export VEYRA_DATABASE_URL=postgresql+psycopg://veyra:veyra@localhost:5432/veyra
+```
+
+```bash
 make demo
+```
+
+```bash
 make api
 ```
 
@@ -49,24 +56,33 @@ In a second terminal:
 make web
 ```
 
-Open http://localhost:3000 and sign in as `demo@veyra.local` with password `veyra-demo-2026`.
+Open http://localhost:3000 and sign in as `demo@veyra.local` with password `veyra-demo-2026`. Press Ctrl+K (Cmd+K) to jump anywhere.
 
-## Tests
+## Checks
 
 ```bash
 export VEYRA_TEST_DATABASE_URL=postgresql+psycopg://veyra:veyra@localhost:5432/veyra_test
+```
+
+```bash
 make test
 ```
 
-Engine tests need no database. API tests rebuild the schema from the Alembic migration in the test database, so point `VEYRA_TEST_DATABASE_URL` at a database you can wipe.
+That runs Ruff, pytest (81 tests, real Postgres), ESLint, TypeScript, Vitest (17 tests) and the production build. End-to-end tests and screenshots are described in [docs/TEST_STRATEGY.md](docs/TEST_STRATEGY.md). CI runs everything, including Playwright, on every pull request.
 
-## Demo dataset
+## Documentation
 
-`demo/` holds a fictional retail center, Mesquite Crossing, with 8 fictional tenants and 9 months of synthetic GL. It has planted problems: a duplicate invoice, an unreviewed GL account, a capital item, a transaction after the audit date, a tenant without rentable area, a tenant without a lease rule, and an unsupported CPI cap. `demo/expected.py` recomputes the expected results without importing the engine and writes `demo/data/expected_results.xlsx` with live Excel formulas.
+| Document | Contents |
+| --- | --- |
+| [docs/ENGINEERING_AUDIT.md](docs/ENGINEERING_AUDIT.md) | v0.1 audit: 27 findings with evidence and fixes |
+| [docs/ARCHITECTURE_V2.md](docs/ARCHITECTURE_V2.md) | Modules, lifecycles, database, API conventions, measured performance |
+| [docs/CALCULATION_ENGINE.md](docs/CALCULATION_ENGINE.md) | Stages, order of operations, rounding, invariants, unsupported terms |
+| [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | Tokens, components, patterns, accessibility |
+| [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) | Verified controls and open items before real customer data |
+| [docs/TEST_STRATEGY.md](docs/TEST_STRATEGY.md) | Test layers and how to run them |
+| [docs/VALIDATION.md](docs/VALIDATION.md) | Target customer, workflow, competitors, sales plan |
+| [docs/screenshots](docs/screenshots) | Every major screen |
 
-## Documents
+## Security status
 
-- [ARCHITECTURE.md](ARCHITECTURE.md): components, data model, calculation rules
-- [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md): milestones, status, what is next
-- [SECURITY.md](SECURITY.md): current controls and what must be done before real customer data
-- [docs/VALIDATION.md](docs/VALIDATION.md): target customer, workflow, competitors, 7-day sales plan, pilot offer
+Synthetic data only. Veyra is not production-secure yet. [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) lists what must be done before loading real leases or ledgers.

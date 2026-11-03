@@ -6,10 +6,18 @@ from decimal import Decimal
 import pytest
 
 from veyra_engine import run_audit
-
 from veyra_engine.types import (
-    AuditInput, Billing, Category, LeaseRule, Mapping, Method, Period, PoolRule,
-    Recoverability, Tenant, Transaction,
+    AuditInput,
+    Billing,
+    Category,
+    LeaseRule,
+    Mapping,
+    Method,
+    Period,
+    PoolRule,
+    Recoverability,
+    Tenant,
+    Transaction,
 )
 
 # FY2026, audited through Sep 30: ytd_days = 273, year_days = 365.
@@ -41,8 +49,7 @@ def prorata(pool="CAM", denom="10000", **kw):
 
 
 def tenant(tid="T1", area="2000", rule=None, start=date(2020, 1, 1), end=None, name=None):
-    return Tenant(tid, name or f"Tenant {tid}", Decimal(area) if area is not None else None,
-                  start, end, rule)
+    return Tenant(tid, name or f"Tenant {tid}", Decimal(area) if area is not None else None, start, end, rule)
 
 
 def rule(*pools, **kw):
@@ -56,6 +63,6 @@ def monthly_billings(tid, amount, months=9):
 @pytest.fixture
 def make():
     def _make(transactions, tenants, billings=(), **kw):
-        return run_audit(AuditInput(PERIOD, tuple(transactions), CATS, MAPS, tuple(tenants),
-                                    tuple(billings), **kw))
+        return run_audit(AuditInput(PERIOD, tuple(transactions), CATS, MAPS, tuple(tenants), tuple(billings), **kw))
+
     return _make

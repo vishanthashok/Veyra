@@ -11,3 +11,6 @@ backend/storage/
 .pgdata/
 demo/output/
 .swarm/
+
+frontend/test-results/
+frontend/playwright-report/
