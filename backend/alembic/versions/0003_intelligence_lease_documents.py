@@ -45,7 +45,7 @@ def upgrade() -> None:
         sa.Column("status", sa.String(30), nullable=False),
         sa.Column("provider", sa.String(30), nullable=False),
         sa.Column("model", sa.String(100), nullable=True),
-        sa.Column("conflicts", sa.JSON, nullable=False, server_default="[]"),
+        sa.Column("conflicts", sa.JSON, nullable=False, server_default=sa.text("\'[]\'::json")),
         sa.Column("incomplete_document_warning", sa.Text, nullable=True),
         sa.Column("input_tokens", sa.Integer, nullable=True),
         sa.Column("output_tokens", sa.Integer, nullable=True),
