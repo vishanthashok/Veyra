@@ -36,5 +36,13 @@ def health():
     return {"status": "ok" if db == "ok" else "degraded", "database": db, "version": app.version}
 
 
-for r in (core.router, imports.router, mappings.router, rules.router, audits.router, workflows.router, lease_intelligence.router):
+for r in (
+    core.router,
+    imports.router,
+    mappings.router,
+    rules.router,
+    audits.router,
+    workflows.router,
+    lease_intelligence.router,
+):
     app.include_router(r, prefix="/api/v1")

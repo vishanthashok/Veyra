@@ -3,6 +3,7 @@ import {
   BookOpenCheck,
   Building2,
   FileSpreadsheet,
+  FileText,
   LayoutGrid,
   Scale,
   Settings2,
