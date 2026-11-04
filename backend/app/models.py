@@ -292,3 +292,133 @@ class AuditLog(OrgOwned, Base):
     entity_id: Mapped[str] = mapped_column(String(100))
     before: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     after: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+
+# --- Workflows -------------------------------------------------------------------------------
+# A workflow is a named, versioned graph of nodes. Every save creates an immutable version;
+# runs always reference the exact version they executed. See docs/WORKFLOWS.md.
+
+
+class Workflow(OrgOwned, Base):
+    __tablename__ = "workflows"
+    name: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(Text, default="")
+    category: Mapped[str] = mapped_column(String(50), default="custom")
+    status: Mapped[str] = mapped_column(String(20), default="draft")  # draft | active | archived
+    template_key: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    current_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("workflow_versions.id", use_alter=True, name="fk_workflows_current_version"), nullable=True
+    )
+    owner_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+
+class WorkflowVersion(OrgOwned, Base):
+    """Immutable definition. Nodes and edges are also stored row by row for querying."""
+
+    __tablename__ = "workflow_versions"
+    __table_args__ = (UniqueConstraint("workflow_id", "number"),)
+    workflow_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workflows.id", ondelete="CASCADE"), index=True)
+    number: Mapped[int] = mapped_column(Integer)
+    definition: Mapped[dict] = mapped_column(JSON, default=dict)  # {"nodes": [...], "edges": [...]}
+    definition_hash: Mapped[str] = mapped_column(String(64))
+    created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+
+class WorkflowNode(OrgOwned, Base):
+    __tablename__ = "workflow_nodes"
+    __table_args__ = (UniqueConstraint("version_id", "node_key"),)
+    version_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workflow_versions.id", ondelete="CASCADE"), index=True)
+    node_key: Mapped[str] = mapped_column(String(64))
+    type: Mapped[str] = mapped_column(String(50))
+    label: Mapped[str] = mapped_column(String(200), default="")
+    config: Mapped[dict] = mapped_column(JSON, default=dict)
+    position: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class WorkflowEdge(OrgOwned, Base):
+    __tablename__ = "workflow_edges"
+    version_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workflow_versions.id", ondelete="CASCADE"), index=True)
+    edge_key: Mapped[str] = mapped_column(String(64))
+    source: Mapped[str] = mapped_column(String(64))
+    source_port: Mapped[str] = mapped_column(String(50), default="out")
+    target: Mapped[str] = mapped_column(String(64))
+    target_port: Mapped[str] = mapped_column(String(50), default="in")
+
+
+class WorkflowRun(OrgOwned, Base):
+    __tablename__ = "workflow_runs"
+    __table_args__ = (
+        UniqueConstraint("organization_id", "idempotency_key", name="uq_workflow_runs_org_idem"),
+        Index("ix_workflow_runs_workflow_created", "workflow_id", "created_at"),
+    )
+    workflow_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workflows.id", ondelete="CASCADE"), index=True)
+    version_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workflow_versions.id"))
+    # queued | running | waiting_approval | completed | failed | cancelled | rejected
+    status: Mapped[str] = mapped_column(String(20), default="queued")
+    inputs: Mapped[dict] = mapped_column(JSON, default=dict)  # node_key -> source_file id
+    retry_of: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("workflow_runs.id"), nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    cancel_requested: Mapped[bool] = mapped_column(Boolean, default=False)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    error: Mapped[str] = mapped_column(Text, default="")
+    summary: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+
+class WorkflowStepRun(OrgOwned, Base):
+    __tablename__ = "workflow_step_runs"
+    __table_args__ = (UniqueConstraint("run_id", "node_key"),)
+    run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workflow_runs.id", ondelete="CASCADE"), index=True)
+    node_key: Mapped[str] = mapped_column(String(64))
+    node_type: Mapped[str] = mapped_column(String(50))
+    label: Mapped[str] = mapped_column(String(200), default="")
+    position: Mapped[int] = mapped_column(Integer, default=0)  # execution order
+    # pending | running | completed | failed | skipped | waiting_approval | cancelled
+    status: Mapped[str] = mapped_column(String(20), default="pending")
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    logs: Mapped[list] = mapped_column(JSON, default=list)
+    outputs: Mapped[dict] = mapped_column(JSON, default=dict)  # port -> {columns, rows (preview), row_count}
+    issues: Mapped[list] = mapped_column(JSON, default=list)
+    error: Mapped[str] = mapped_column(Text, default="")
+
+
+class WorkflowArtifact(OrgOwned, Base):
+    """Files a run produced. kind: output (downloadable) or step_data (internal, for resume)."""
+
+    __tablename__ = "workflow_artifacts"
+    run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workflow_runs.id", ondelete="CASCADE"), index=True)
+    step_run_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("workflow_step_runs.id", ondelete="CASCADE"), nullable=True
+    )
+    kind: Mapped[str] = mapped_column(String(20), default="output")
+    name: Mapped[str] = mapped_column(String(200))
+    content_type: Mapped[str] = mapped_column(String(100))
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    sha256: Mapped[str] = mapped_column(String(64))
+    content: Mapped[bytes] = mapped_column(LargeBinary)
+
+
+class WorkflowApproval(OrgOwned, Base):
+    __tablename__ = "workflow_approvals"
+    run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workflow_runs.id", ondelete="CASCADE"), index=True)
+    step_run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workflow_step_runs.id", ondelete="CASCADE"))
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending | approved | rejected
+    instructions: Mapped[str] = mapped_column(Text, default="")
+    decided_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    note: Mapped[str] = mapped_column(Text, default="")
+
+
+class WorkflowTemplate(Timestamps, Base):
+    """Built-in templates, shared by every organization. Synced from app/workflows/templates.py."""
+
+    __tablename__ = "workflow_templates"
+    key: Mapped[str] = mapped_column(String(100), unique=True)
+    name: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(Text, default="")
+    category: Mapped[str] = mapped_column(String(50))
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    definition: Mapped[dict] = mapped_column(JSON, default=dict)
