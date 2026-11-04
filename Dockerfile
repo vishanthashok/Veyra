@@ -19,6 +19,7 @@ WORKDIR /app/backend
 COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev
 COPY backend/ ./
+COPY demo/generate.py /app/demo/generate.py
 COPY demo/data /app/demo/data
 COPY --from=web /web/.next/standalone /app/web
 COPY --from=web /web/.next/static /app/web/.next/static
