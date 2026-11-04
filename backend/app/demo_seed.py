@@ -2,6 +2,7 @@
 
 Usage (from backend/):
     uv run python -m app.demo_seed            # seed and run an audit
+    uv run python -m app.demo_seed --release  # deploy hook: sync the demo password, seed once
     uv run python -m app.demo_seed --reports  # also write the Excel reports to demo/output/
 
 ALL DATA IS SYNTHETIC.
@@ -18,7 +19,7 @@ from sqlalchemy import select
 
 from .auth import hash_password
 from .db import SessionLocal
-from .models import Organization, User
+from .models import Organization, Property, User
 
 REPO = Path(__file__).resolve().parents[2]
 DATA = REPO / "demo" / "data"
@@ -40,6 +41,30 @@ def ensure_demo_user(email=DEMO_EMAIL, password=DEMO_PASSWORD, org_name="Demo Or
             db.add(user)
             db.commit()
         return user.id, user.organization_id
+
+
+def sync_demo_password(email=DEMO_EMAIL, password=DEMO_PASSWORD) -> None:
+    """Make the stored demo password match VEYRA_DEMO_PASSWORD, so changing the config var works."""
+    with SessionLocal() as db:
+        user = db.scalar(select(User).where(User.email == email))
+        if user is not None:
+            user.password_hash = hash_password(password)
+            db.commit()
+
+
+def demo_property_exists(email=DEMO_EMAIL) -> bool:
+    with SessionLocal() as db:
+        user = db.scalar(select(User).where(User.email == email))
+        if user is None:
+            return False
+        return (
+            db.scalar(
+                select(Property.id).where(
+                    Property.organization_id == user.organization_id, Property.name == PROPERTY_NAME
+                )
+            )
+            is not None
+        )
 
 
 def _ok(resp, code=(200, 201)):
@@ -148,8 +173,24 @@ def main():
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--reports", action="store_true")
+    ap.add_argument(
+        "--release",
+        action="store_true",
+        help="Deploy hook. Does nothing unless VEYRA_DEMO_PASSWORD is set; then syncs the demo "
+        "password and seeds the demo property only if it is missing.",
+    )
     args = ap.parse_args()
-    ensure_demo_user()
+    if args.release:
+        if not os.environ.get("VEYRA_DEMO_PASSWORD"):
+            print("VEYRA_DEMO_PASSWORD not set; skipping demo account.")
+            return
+        ensure_demo_user()
+        sync_demo_password()
+        if demo_property_exists():
+            print(f"Demo account ready: {DEMO_EMAIL}. Demo property already present.")
+            return
+    else:
+        ensure_demo_user()
     # https so the client returns Secure session cookies when VEYRA_COOKIE_SECURE is on.
     with TestClient(app, base_url="https://testserver") as client:
         out = seed(client)
@@ -166,7 +207,11 @@ def main():
                 r = client.get(f"/api/v1/audit-runs/{out['run']['id']}/reports/{kind}.xlsx")
                 (dest / f"mesquite_crossing_{kind}_PROVISIONAL.xlsx").write_bytes(r.content)
             print(f"  reports written to {dest}")
-        print(f"Sign in as {DEMO_EMAIL} / {DEMO_PASSWORD}")
+        print(
+            f"Sign in as {DEMO_EMAIL} with VEYRA_DEMO_PASSWORD"
+            if args.release
+            else f"Sign in as {DEMO_EMAIL} / {DEMO_PASSWORD}"
+        )
 
 
 if __name__ == "__main__":
