@@ -1,19 +1,20 @@
 [project]
 name = "veyra-backend"
-version = "0.1.0"
+version = "0.3.0"
 description = "Veyra CAM pre-close audit API and calculation engine"
 requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.20.1",
     "argon2-cffi>=25.1.0",
     "fastapi>=0.162.0",
-    # Runtime, not dev: the demo seed loads data through the API with the Starlette TestClient.
     "httpx>=0.28.1",
     "itsdangerous>=2.2.0",
+    "openai>=2.0.0",
     "openpyxl>=3.1.5",
     "pandas>=3.1.0",
     "psycopg[binary]>=3.3.7",
     "pydantic-settings>=2.16.2",
+    "pypdf>=6.0.0",
     "python-multipart>=0.0.33",
     "sqlalchemy>=2",
     "uvicorn[standard]>=0.54.0",
@@ -44,7 +45,7 @@ select = ["E", "F", "W", "I", "B", "UP", "S", "BLE", "C4", "SIM", "RUF"]
 ignore = ["B008", "S101", "SIM108", "RUF001", "RUF002", "RUF003", "UP040", "UP046", "UP047"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S", "E501", "E402", "B", "SIM", "RUF059"]
+"tests/**" = ["S", "E501", "B", "SIM", "RUF059"]
 "app/demo_seed.py" = ["S"]
 "alembic/env.py" = ["E402"]
 "scripts/**" = ["S", "E501"]
