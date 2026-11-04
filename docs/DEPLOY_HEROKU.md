@@ -13,7 +13,7 @@ Use synthetic data only until the items in `docs/SECURITY_REVIEW.md` are closed.
 | App | A Heroku app, for example `veyra-demo`. Its address is `https://veyra-demo-xxxx.herokuapp.com`. |
 | Dyno | The running container. Eco dynos sleep after 30 minutes without visits and wake on the next visit in a few seconds. |
 | Postgres add-on | The database. Heroku sets `DATABASE_URL` for you. |
-| Release phase | Before each new version goes live, Heroku runs `alembic upgrade head` to update the database tables. |
+| Release phase | Before each new version goes live, Heroku runs `deploy/release.sh`: it updates the database tables, then creates the demo account from `VEYRA_DEMO_PASSWORD` and loads the demo property the first time. |
 | Config vars | Settings such as the secret key, set in the dashboard. |
 
 ## Before you start
@@ -30,15 +30,8 @@ Use synthetic data only until the items in `docs/SECURITY_REVIEW.md` are closed.
    - `VEYRA_DEMO_PASSWORD`: type a password you will use to sign in. At least 12 characters.
    - Leave the others as filled in. `VEYRA_SECRET_KEY` is generated for you.
 4. Click Deploy app. The first build takes 5 to 10 minutes.
-5. When it finishes, click Manage App.
-6. Load the demo property: top right, More, Run console. Type the command below and click Run.
-
-   ```
-   python -m app.demo_seed
-   ```
-
-   It ends with `Sign in as demo@veyra.local / <your password>`.
-7. Click Open app. Sign in with `demo@veyra.local` and your `VEYRA_DEMO_PASSWORD`.
+5. When it finishes, click View. The demo account and demo property are created during the deploy.
+6. Sign in with `demo@veyra.local` and your `VEYRA_DEMO_PASSWORD`.
 
 Turn on automatic deploys so every merge to `main` updates the site:
 
@@ -81,10 +74,6 @@ heroku ps:type eco -a veyra-demo
 ```
 
 ```bash
-heroku run -a veyra-demo python -m app.demo_seed
-```
-
-```bash
 heroku open -a veyra-demo
 ```
 
@@ -104,7 +93,8 @@ heroku open -a veyra-demo
 | --- | --- |
 | Application error page right after deploy | Open the logs. `Unsafe production configuration` means `VEYRA_SECRET_KEY` is shorter than 32 characters or `VEYRA_COOKIE_SECURE` is not `true`. |
 | Release failed | The database migration failed. The logs show the Alembic error. The previous version stays live. |
-| Sign in says invalid email or password | Run the demo seed (step 6). It creates the user. To change the password, set `VEYRA_DEMO_PASSWORD` and run the seed again. |
+| Sign in says invalid email or password | Check `VEYRA_DEMO_PASSWORD` under Settings, Reveal Config Vars. Changing it restarts the app and the release phase updates the stored password. |
+| Too many failed sign-in attempts | Five wrong passwords lock that email for 15 minutes. More, Restart all dynos clears the lock. |
 | First visit takes a few seconds | The Eco dyno was asleep. Use a Basic dyno ($7/month) to keep it awake: Resources tab, change dyno type. |
 | `R14 Memory quota exceeded` in logs | The 512 MB Eco dyno is too small for the load. Move to a Basic or Standard-1X dyno. |
 | Build fails at `pnpm install` or `uv sync` | A lockfile is out of date. Run `pnpm install` in `frontend/` or `uv lock` in `backend/`, commit and push. |

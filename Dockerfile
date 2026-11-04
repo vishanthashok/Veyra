@@ -23,8 +23,8 @@ COPY demo/data /app/demo/data
 COPY --from=web /web/.next/standalone /app/web
 COPY --from=web /web/.next/static /app/web/.next/static
 COPY --from=web /web/public /app/web/public
-COPY deploy/start.sh /app/start.sh
-RUN chmod +x /app/start.sh && useradd --create-home veyra
+COPY deploy/start.sh deploy/release.sh /app/
+RUN chmod +x /app/start.sh /app/release.sh && useradd --create-home veyra
 USER veyra
 ENV PATH="/app/backend/.venv/bin:$PATH" PYTHONUNBUFFERED=1 NODE_ENV=production VEYRA_ENV=production
 CMD ["/app/start.sh"]
