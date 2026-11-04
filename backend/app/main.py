@@ -5,13 +5,13 @@ from sqlalchemy import text
 from .config import settings
 from .core import errors, middleware
 from .db import engine
-from .routers import audits, core, imports, mappings, rules, workflows
+from .routers import audits, core, imports, lease_intelligence, mappings, rules, workflows
 
 settings.validate_for_runtime()
 middleware.configure_logging(settings.log_level)
 
 app = FastAPI(
-    title="Veyra API", version="0.2.0", description="CAM pre-close audit. Provisional results for accountant review."
+    title="Veyra API", version="0.3.0", description="CAM pre-close audit. Provisional results for accountant review."
 )
 app.add_middleware(
     CORSMiddleware,
@@ -36,5 +36,13 @@ def health():
     return {"status": "ok" if db == "ok" else "degraded", "database": db, "version": app.version}
 
 
-for r in (core.router, imports.router, mappings.router, rules.router, audits.router, workflows.router):
+for r in (
+    core.router,
+    imports.router,
+    mappings.router,
+    rules.router,
+    audits.router,
+    workflows.router,
+    lease_intelligence.router,
+):
     app.include_router(r, prefix="/api/v1")

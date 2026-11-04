@@ -3,6 +3,7 @@ import {
   BookOpenCheck,
   Building2,
   FileSpreadsheet,
+  FileText,
   LayoutGrid,
   Scale,
   Settings2,
@@ -31,6 +32,7 @@ export const WORKSPACE: NavItem[] = [
 export const REVIEW: NavItem[] = [
   { key: "setup", label: "Property setup", icon: Settings2, slug: "" },
   { key: "import", label: "Data imports", icon: Upload, slug: "import" },
+  { key: "documents", label: "Documents", icon: FileText, slug: "documents" },
   {
     key: "mapping",
     label: "Expense mapping",
