@@ -5,7 +5,7 @@ from sqlalchemy import text
 from .config import settings
 from .core import errors, middleware
 from .db import engine
-from .routers import audits, core, imports, mappings, rules
+from .routers import audits, core, imports, mappings, rules, workflows
 
 settings.validate_for_runtime()
 middleware.configure_logging(settings.log_level)
@@ -36,5 +36,5 @@ def health():
     return {"status": "ok" if db == "ok" else "degraded", "database": db, "version": app.version}
 
 
-for r in (core.router, imports.router, mappings.router, rules.router, audits.router):
+for r in (core.router, imports.router, mappings.router, rules.router, audits.router, workflows.router):
     app.include_router(r, prefix="/api/v1")
