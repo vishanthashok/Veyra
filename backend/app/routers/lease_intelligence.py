@@ -5,7 +5,6 @@ import hashlib
 import io
 import json
 import uuid
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
@@ -32,7 +31,10 @@ def _pdf_pages(content: bytes) -> list[str]:
         from pypdf import PdfReader
         reader = PdfReader(io.BytesIO(content))
     except Exception as exc:
-        raise HTTPException(422, "This PDF could not be read. Upload a text-readable PDF or provide OCR first.") from exc
+        raise HTTPException(
+            422,
+            "This PDF could not be read. Upload a text-readable PDF or provide OCR first.",
+        ) from exc
     return [(page.extract_text() or "").strip() for page in reader.pages]
 
 
@@ -101,7 +103,6 @@ async def upload_lease_document(
     pages = _pdf_pages(content)
     document_id, version_id = uuid.uuid4(), uuid.uuid4()
     status = "text_extracted" if any(pages) else "needs_ocr"
-    now = datetime.now(timezone.utc)
     db.execute(
         text(
             """insert into lease_documents
@@ -121,7 +122,14 @@ async def upload_lease_document(
         {"id": version_id, "org": actor.org_id, "document": document_id, "source": source.id,
          "status": status, "pages": len(pages), "text": "\n\n".join(pages)},
     )
-    db.execute(text("update lease_documents set current_version_id = :version where id = :id and organization_id = :org"), {"version": version_id, "id": document_id, "org": actor.org_id})
+    db.execute(
+        text(
+            "update lease_documents "
+            "set current_version_id = :version "
+            "where id = :id and organization_id = :org"
+        ),
+        {"version": version_id, "id": document_id, "org": actor.org_id},
+    )
     db.commit()
     return _out(_doc(db, document_id, actor))
 
@@ -146,14 +154,22 @@ def list_lease_documents(pid: uuid.UUID, actor: Actor = Depends(current_actor), 
 def get_lease_document(doc_id: uuid.UUID, actor: Actor = Depends(current_actor), db: Session = Depends(get_session)):
     row = _doc(db, doc_id, actor)
     extraction = db.execute(
-        text("select * from lease_extractions where organization_id = :org and document_version_id = :version order by created_at desc limit 1"),
+        text(
+            "select * from lease_extractions "
+            "where organization_id = :org and document_version_id = :version "
+            "order by created_at desc limit 1"
+        ),
         {"org": actor.org_id, "version": row["version_id"]},
     ).mappings().first()
     result = _out(row)
     result["extraction"] = None
     if extraction:
         terms = db.execute(
-            text("select * from extracted_lease_terms where organization_id = :org and extraction_id = :id order by field_name"),
+            text(
+                "select * from extracted_lease_terms "
+                "where organization_id = :org and extraction_id = :id "
+                "order by field_name"
+            ),
             {"org": actor.org_id, "id": extraction["id"]},
         ).mappings().all()
         result["extraction"] = {
@@ -164,7 +180,19 @@ def get_lease_document(doc_id: uuid.UUID, actor: Actor = Depends(current_actor),
             "conflicts": extraction["conflicts"],
             "incomplete_document_warning": extraction["incomplete_document_warning"],
             "terms": [
-{"id": str(term["id"]), "extraction_id": str(term["extraction_id"]), "field_name": term["field_name"], "proposed_value": term["proposed_value"], "source_page": term["source_page"], "supporting_excerpt": term["supporting_excerpt"], "confidence": term["confidence"], "uncertainty": term["uncertainty"], "review_status": term["review_status"], "review_note": term["review_note"], "reviewed_at": term["reviewed_at"].isoformat() if term["reviewed_at"] else None}
+{
+    "id": str(term["id"]),
+    "extraction_id": str(term["extraction_id"]),
+    "field_name": term["field_name"],
+    "proposed_value": term["proposed_value"],
+    "source_page": term["source_page"],
+    "supporting_excerpt": term["supporting_excerpt"],
+    "confidence": term["confidence"],
+    "uncertainty": term["uncertainty"],
+    "review_status": term["review_status"],
+    "review_note": term["review_note"],
+    "reviewed_at": term["reviewed_at"].isoformat() if term["reviewed_at"] else None,
+}
                 for term in terms
             ],
         }
@@ -172,7 +200,11 @@ def get_lease_document(doc_id: uuid.UUID, actor: Actor = Depends(current_actor),
 
 
 @router.post("/lease-documents/{doc_id}/analyze")
-def analyze_lease_document(doc_id: uuid.UUID, actor: Actor = Depends(current_actor), db: Session = Depends(get_session)):
+def analyze_lease_document(
+    doc_id: uuid.UUID,
+    actor: Actor = Depends(current_actor),
+    db: Session = Depends(get_session),
+):
     row = _doc(db, doc_id, actor)
     if row["processing_status"] != "text_extracted":
         raise HTTPException(422, "The document must have extracted text before analysis.")
@@ -196,7 +228,8 @@ def analyze_lease_document(doc_id: uuid.UUID, actor: Actor = Depends(current_act
     db.execute(
         text(
             """insert into lease_extractions
-               (id, organization_id, document_version_id, status, provider, model, conflicts, incomplete_document_warning,
+               (id, organization_id, document_version_id, status, provider, model, conflicts,
+                incomplete_document_warning,
                 input_tokens, output_tokens)
                values (:id, :org, :version, 'needs_review', 'openai', :model, :conflicts, :warning, :input, :output)"""
         ),
@@ -263,7 +296,9 @@ def apply_reviewed_terms(
         raise HTTPException(404, "Extraction not found.")
     terms = db.execute(
         text(
-            "select * from extracted_lease_terms where extraction_id = :id and organization_id = :org and review_status = 'approved'"
+            "select * from extracted_lease_terms "
+            "where extraction_id = :id and organization_id = :org "
+            "and review_status = 'approved'"
         ),
         {"id": extraction_id, "org": actor.org_id},
     ).mappings().all()
@@ -292,7 +327,13 @@ def apply_reviewed_terms(
                values (:id, :org, :property, :ref, 'draft', 1, :unsupported, :source, :notes)"""
         ),
         {"id": rule_id, "org": actor.org_id, "property": extraction["property_id"], "ref": ref,
-         "unsupported": json.dumps([key for key in approved if key not in {"premises_square_feet", "lease_commencement", "lease_expiration"}]),
+         "unsupported": json.dumps(
+             [
+                 key
+                 for key in approved
+                 if key not in {"premises_square_feet", "lease_commencement", "lease_expiration"}
+             ]
+         ),
          "source": f"Lease document {extraction['document_id']}",
          "notes": notes},
     )
@@ -301,4 +342,8 @@ def apply_reviewed_terms(
         {"id": extraction_id, "org": actor.org_id},
     )
     db.commit()
-    return {"lease_rule_id": str(rule_id), "status": "draft", "message": "Applied as a draft. Approve it in Lease Rules before calculations can use it."}
+    return {
+        "lease_rule_id": str(rule_id),
+        "status": "draft",
+        "message": "Applied as a draft. Approve it in Lease Rules before calculations can use it.",
+    }
