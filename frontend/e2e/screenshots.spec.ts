@@ -89,3 +89,77 @@ test("capture screens", async ({ page, browser }) => {
     await p.close();
   }
 });
+
+test("capture workflow screens", async ({ page, browser }) => {
+  test.setTimeout(180_000);
+  await signIn(page);
+  const csv = (await import("node:fs")).readFileSync(path.resolve(__dirname, "../../demo/workflows/gl_export_messy.csv"), "utf8");
+  // Set up through the API so the captures show a realistic history.
+  const ids = await page.evaluate(async (text) => {
+    const j = (r: Response) => r.json();
+    const props = await fetch("/api/v1/properties").then(j);
+    const post = (url: string, body: unknown) =>
+      fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(j);
+    const gl = await post("/api/v1/workflows", { name: "GL expense cleaner", template_key: "gl_expense_cleaner" });
+    const fd = new FormData();
+    fd.append("file", new Blob([text], { type: "text/csv" }), "gl_export_messy.csv");
+    const file = await fetch("/api/v1/workflow-files", { method: "POST", body: fd }).then(j);
+    const run = await post(`/api/v1/workflows/${gl.id}/runs`, { inputs: { upload: file.id } });
+    await post("/api/v1/workflows", {
+      name: "CAM expense classification",
+      template_key: "cam_expense_classification",
+      property_id: props[0].id,
+    });
+    const pre = await post("/api/v1/workflows", {
+      name: "CAM pre-close readiness",
+      template_key: "cam_preclose_readiness",
+      property_id: props[0].id,
+    });
+    const preRun = await post(`/api/v1/workflows/${pre.id}/runs`, {});
+    return { gl: gl.id, run: run.id, preRun: preRun.id };
+  }, csv);
+  await page.waitForTimeout(1500);
+
+  await page.goto("/workflows");
+  await expect(page.getByRole("link", { name: "GL expense cleaner" })).toBeVisible();
+  await noOverflow(page);
+  await page.screenshot({ path: `${OUT}/17-workflows-library.png` });
+  await page.getByRole("tab", { name: /Templates/ }).click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: `${OUT}/18-workflow-templates.png`, fullPage: true });
+
+  await page.goto(`/workflows/${ids.gl}`);
+  await expect(page.getByLabel("Workflow canvas")).toBeVisible();
+  await page.waitForTimeout(900);
+  await page.locator('.react-flow__node[data-id="clean"]').click();
+  await page.getByRole("tab", { name: /Data preview/ }).click();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${OUT}/19-workflow-builder.png` });
+
+  await page.goto(`/workflows/runs/${ids.run}`);
+  await expect(page.getByRole("heading", { name: /Run of/ })).toBeVisible();
+  await page.getByRole("button", { name: /Normalize values/ }).click();
+  await page.waitForTimeout(400);
+  await noOverflow(page);
+  await page.screenshot({ path: `${OUT}/20-workflow-run.png`, fullPage: true });
+
+  await page.goto(`/workflows/runs/${ids.preRun}`);
+  await expect(page.getByRole("region", { name: "Approval required" })).toBeVisible();
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: `${OUT}/21-workflow-approval.png`, fullPage: true });
+
+  const cookies = await page.context().cookies();
+  const p = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+  await p.context().addCookies(cookies);
+  for (const [url, wait, file] of [
+    ["/workflows", "GL expense cleaner", "workflows"],
+    [`/workflows/runs/${ids.run}`, "Errors and warnings", "workflow-run"],
+  ] as const) {
+    await p.goto(url);
+    await expect(p.getByText(wait).first()).toBeVisible();
+    await p.waitForTimeout(500);
+    await noOverflow(p);
+    await p.screenshot({ path: `${OUT}/viewport-mobile-390-${file}.png`, fullPage: true });
+  }
+  await p.close();
+});

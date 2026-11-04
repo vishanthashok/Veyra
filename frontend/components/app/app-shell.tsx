@@ -89,10 +89,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     router.push("/login");
   }
 
-  const narrow = collapsed && !mobileOpen;
+  // The workflow builder needs the width for its canvas, so the sidebar shows icons only there.
+  // This does not change the stored preference.
+  const builder = /^\/workflows\/(?!runs\/)[^/]+$/.test(path);
+  const narrow = (collapsed || builder) && !mobileOpen;
   const hrefFor = (n: NavItem) => (n.href ? n.href : current ? `/properties/${current.id}${n.slug ? `/${n.slug}` : ""}` : "/properties");
   const isActive = (n: NavItem) => {
-    if (n.href) return n.href === "/" ? path === "/" : path === n.href;
+    if (n.href) return n.href === "/" ? path === "/" : path === n.href || (n.key === "workflows" && path.startsWith("/workflows/"));
     if (!inProperty || !current) return false;
     const href = hrefFor(n);
     return n.slug ? path.startsWith(href) : path === href || path === `${href}/tenants`;
@@ -306,7 +309,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </MenuContent>
             </Menu>
           </header>
-          <main id="main" className="mx-auto w-full min-w-0 max-w-[var(--content-max)] flex-1 px-4 pb-16 pt-7 md:px-8">
+          <main
+            id="main"
+            className={cn(
+              "w-full min-w-0 flex-1",
+              // The workflow builder is a full-bleed canvas; every other page uses the content column.
+              builder ? "" : "mx-auto max-w-[var(--content-max)] px-4 pb-16 pt-7 md:px-8",
+            )}
+          >
             {children}
           </main>
         </div>

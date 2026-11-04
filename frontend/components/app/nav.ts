@@ -1,4 +1,15 @@
-import { AlertTriangle, BookOpenCheck, Building2, FileSpreadsheet, FileText, LayoutGrid, Scale, Settings2, Tags, Upload } from "lucide-react";
+import {
+  AlertTriangle,
+  BookOpenCheck,
+  Building2,
+  FileSpreadsheet,
+  LayoutGrid,
+  Scale,
+  Settings2,
+  Tags,
+  Upload,
+  Workflow,
+} from "lucide-react";
 import type { DashboardRow } from "@/lib/api";
 
 export type NavItem = {
@@ -14,6 +25,7 @@ export type NavItem = {
 export const WORKSPACE: NavItem[] = [
   { key: "overview", label: "Overview", icon: LayoutGrid, href: "/" },
   { key: "properties", label: "Properties", icon: Building2, href: "/properties" },
+  { key: "workflows", label: "Workflows", icon: Workflow, href: "/workflows" },
 ];
 
 export const REVIEW: NavItem[] = [

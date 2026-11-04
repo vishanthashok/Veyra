@@ -46,6 +46,17 @@ const STATUS: Record<string, [Tone, string]> = {
   in_review_status: ["info", "In review"],
   ready: ["success", "Ready"],
   final: ["accent", "Final"],
+  // workflows
+  queued: ["neutral", "Queued"],
+  running: ["info", "Running"],
+  waiting_approval: ["warning", "Awaiting approval"],
+  completed: ["success", "Completed"],
+  cancelled: ["neutral", "Cancelled"],
+  rejected: ["error", "Rejected"],
+  skipped: ["neutral", "Skipped"],
+  pending: ["neutral", "Pending"],
+  active: ["success", "Active"],
+  archived: ["neutral", "Archived"],
 };
 
 const DOT: Record<Tone, string> = {
