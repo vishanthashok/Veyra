@@ -12,6 +12,8 @@ It is an accountant-review workflow. It does not interpret leases, does not prod
 
 ## What it does
 
+- **Workflows** turn spreadsheets and property data into reviewed workbooks: a visual builder, five templates (GL cleaner, expense classification, billing comparison, lease rule audit, pre-close readiness), versioned definitions, run history, approval gates and downloadable outputs. See [docs/WORKFLOWS.md](docs/WORKFLOWS.md).
+
 - **Overview** shows what stands between each property and a clean year-end reconciliation: four metrics, a ranked Action center, recent activity from real records and per-property readiness. The v0.3 interface is documented in [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
 
 - **Imports** GL, billings and lease-rule spreadsheets through a wizard: upload, map columns, dry-run validation, confirm, results. Commits are atomic. Rejected rows are kept and downloadable. Re-importing an identical file needs confirmation.
@@ -88,6 +90,7 @@ That runs Ruff, pytest (83 tests, real Postgres), ESLint, TypeScript, Vitest (24
 | [docs/ARCHITECTURE_V2.md](docs/ARCHITECTURE_V2.md) | Modules, lifecycles, database, API conventions, measured performance |
 | [docs/CALCULATION_ENGINE.md](docs/CALCULATION_ENGINE.md) | Stages, order of operations, rounding, invariants, unsupported terms |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | Tokens, components, patterns, accessibility |
+| [docs/WORKFLOWS.md](docs/WORKFLOWS.md) | Workflow engine, execution semantics, node catalog, templates, API, security |
 | [docs/DEPLOY_HEROKU.md](docs/DEPLOY_HEROKU.md) | Deploy to Heroku from zero |
 | [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) | Verified controls and open items before real customer data |
 | [docs/TEST_STRATEGY.md](docs/TEST_STRATEGY.md) | Test layers and how to run them |
