@@ -21,6 +21,12 @@ It is an accountant-review workflow. It does not interpret leases, does not prod
 - **Exceptions** form a review queue with assignee, lifecycle (open, in review, resolved, accepted, reopened) and history. Blocking errors cannot be resolved by hand.
 - **Reports**: six Excel workbooks with a cover sheet (run ID, engine version, input fingerprint, source files, assumptions, reviewer status), built only from the run's snapshot.
 
+## Deploy
+
+One Heroku app with an Eco dyno and Postgres, about $10/month. Step by step: [docs/DEPLOY_HEROKU.md](docs/DEPLOY_HEROKU.md).
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/vishanthashok/Veyra)
+
 ## Run it locally
 
 Requirements: Python 3.13 with [uv](https://docs.astral.sh/uv/), Node 22 with pnpm, PostgreSQL 16 (or Docker).
@@ -82,6 +88,7 @@ That runs Ruff, pytest (83 tests, real Postgres), ESLint, TypeScript, Vitest (24
 | [docs/ARCHITECTURE_V2.md](docs/ARCHITECTURE_V2.md) | Modules, lifecycles, database, API conventions, measured performance |
 | [docs/CALCULATION_ENGINE.md](docs/CALCULATION_ENGINE.md) | Stages, order of operations, rounding, invariants, unsupported terms |
 | [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) | Tokens, components, patterns, accessibility |
+| [docs/DEPLOY_HEROKU.md](docs/DEPLOY_HEROKU.md) | Deploy to Heroku from zero |
 | [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) | Verified controls and open items before real customer data |
 | [docs/TEST_STRATEGY.md](docs/TEST_STRATEGY.md) | Test layers and how to run them |
 | [docs/VALIDATION.md](docs/VALIDATION.md) | Target customer, workflow, competitors, sales plan |

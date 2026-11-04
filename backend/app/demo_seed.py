@@ -150,7 +150,8 @@ def main():
     ap.add_argument("--reports", action="store_true")
     args = ap.parse_args()
     ensure_demo_user()
-    with TestClient(app) as client:
+    # https so the client returns Secure session cookies when VEYRA_COOKIE_SECURE is on.
+    with TestClient(app, base_url="https://testserver") as client:
         out = seed(client)
         s = out["run"]["summary"]
         print(f"Seeded {PROPERTY_NAME}. Audit run {out['run']['id']}")
