@@ -1,0 +1,12 @@
+Account,Account Name,Date,Amount,Vendor,Memo/Description
+6100,Landscaping,01/05/2026,"2,400.00",Cedar Ridge Grounds LLC,Monthly grounds 01/2026
+6110.0, Janitorial ,2026-01-05,1850,Sun City Porter Services,Porter service 01/2026
+6120,Parking Lot,1/12/2026,$975.50,Lone Star Paving,Sweeping 01/2026
+6120,Parking Lot,1/12/2026,975.50,Lone Star Paving,Sweeping 01/2026
+6130,Security,2026-02-02,1100.00,Alamo Patrol,
+6140,Utilities - Common,2026-02-03,(125.00),City of San Antonio,Credit for meter error
+6150,Roof Repair,2026-02-10,4500.00,Hill Country Roofing,Patch north parapet
+6100,Landscaping,not a date,2400.00,Cedar Ridge Grounds LLC,Bad date row
+6110,Janitorial,2026-02-05,18.505,Sun City Porter Services,Too many decimals
+,Unknown,2026-02-06,300.00,Misc Vendor,Missing account
+6500,Insurance,2026-03-01,=1+1,Lone Star Mutual,Formula injection attempt
