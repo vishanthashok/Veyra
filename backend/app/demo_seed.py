@@ -167,10 +167,6 @@ def seed(client, data_dir: Path = DATA, email=DEMO_EMAIL, password=DEMO_PASSWORD
 
 
 def main():
-    from fastapi.testclient import TestClient
-
-    from .main import app
-
     ap = argparse.ArgumentParser()
     ap.add_argument("--reports", action="store_true")
     ap.add_argument(
@@ -191,6 +187,12 @@ def main():
             return
     else:
         ensure_demo_user()
+
+    # Imported after the account exists, so a missing optional package cannot block sign-in.
+    from fastapi.testclient import TestClient
+
+    from .main import app
+
     # https so the client returns Secure session cookies when VEYRA_COOKIE_SECURE is on.
     with TestClient(app, base_url="https://testserver") as client:
         out = seed(client)
