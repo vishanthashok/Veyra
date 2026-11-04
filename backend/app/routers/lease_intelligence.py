@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import uuid
 from datetime import datetime, timezone
 
@@ -32,10 +33,7 @@ def _pdf_pages(content: bytes) -> list[str]:
         reader = PdfReader(io.BytesIO(content))
     except Exception as exc:
         raise HTTPException(422, "This PDF could not be read. Upload a text-readable PDF or provide OCR first.") from exc
-    pages = [(page.extract_text() or "").strip() for page in reader.pages]
-    if not pages or not any(pages):
-        raise HTTPException(422, "No text was extracted from this PDF. OCR is required before analysis.")
-    return pages
+    return [(page.extract_text() or "").strip() for page in reader.pages]
 
 
 def _doc(db: Session, doc_id: uuid.UUID, actor: Actor) -> dict:
@@ -107,11 +105,11 @@ async def upload_lease_document(
     db.execute(
         text(
             """insert into lease_documents
-               (id, organization_id, property_id, tenant_id, document_type, filename, status, current_version_id)
-               values (:id, :org, :property, :tenant, :kind, :filename, :status, :version)"""
+               (id, organization_id, property_id, tenant_id, document_type, filename, status)
+               values (:id, :org, :property, :tenant, :kind, :filename, :status)"""
         ),
         {"id": document_id, "org": actor.org_id, "property": pid, "tenant": tenant_id, "kind": document_type,
-         "filename": file.filename[:300], "status": status, "version": version_id},
+         "filename": file.filename[:300], "status": status},
     )
     db.execute(
         text(
@@ -123,6 +121,7 @@ async def upload_lease_document(
         {"id": version_id, "org": actor.org_id, "document": document_id, "source": source.id,
          "status": status, "pages": len(pages), "text": "\n\n".join(pages)},
     )
+    db.execute(text("update lease_documents set current_version_id = :version where id = :id and organization_id = :org"), {"version": version_id, "id": document_id, "org": actor.org_id})
     db.commit()
     return _out(_doc(db, document_id, actor))
 
@@ -165,8 +164,7 @@ def get_lease_document(doc_id: uuid.UUID, actor: Actor = Depends(current_actor),
             "conflicts": extraction["conflicts"],
             "incomplete_document_warning": extraction["incomplete_document_warning"],
             "terms": [
-                {**dict(term), "id": str(term["id"]), "extraction_id": str(term["extraction_id"]),
-                 "proposed_value": term["proposed_value"], "review_status": term["review_status"]}
+{"id": str(term["id"]), "extraction_id": str(term["extraction_id"]), "field_name": term["field_name"], "proposed_value": term["proposed_value"], "source_page": term["source_page"], "supporting_excerpt": term["supporting_excerpt"], "confidence": term["confidence"], "uncertainty": term["uncertainty"], "review_status": term["review_status"], "review_note": term["review_note"], "reviewed_at": term["reviewed_at"].isoformat() if term["reviewed_at"] else None}
                 for term in terms
             ],
         }
@@ -203,7 +201,7 @@ def analyze_lease_document(doc_id: uuid.UUID, actor: Actor = Depends(current_act
                values (:id, :org, :version, 'needs_review', 'openai', :model, :conflicts, :warning, :input, :output)"""
         ),
         {"id": extraction_id, "org": actor.org_id, "version": row["version_id"], "model": usage["model"],
-         "conflicts": parsed.conflicts, "warning": parsed.incomplete_document_warning,
+         "conflicts": json.dumps(parsed.conflicts), "warning": parsed.incomplete_document_warning,
          "input": usage["input_tokens"], "output": usage["output_tokens"]},
     )
     for term in parsed.terms:
@@ -294,7 +292,7 @@ def apply_reviewed_terms(
                values (:id, :org, :property, :ref, 'draft', 1, :unsupported, :source, :notes)"""
         ),
         {"id": rule_id, "org": actor.org_id, "property": extraction["property_id"], "ref": ref,
-         "unsupported": [key for key in approved if key not in {"premises_square_feet", "lease_commencement", "lease_expiration"}],
+         "unsupported": json.dumps([key for key in approved if key not in {"premises_square_feet", "lease_commencement", "lease_expiration"}]),
          "source": f"Lease document {extraction['document_id']}",
          "notes": notes},
     )

@@ -6,7 +6,6 @@ writes Veyra financial records or receives authorization to call application too
 from __future__ import annotations
 
 import os
-from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
