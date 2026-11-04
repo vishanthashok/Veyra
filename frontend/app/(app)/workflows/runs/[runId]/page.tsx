@@ -51,26 +51,31 @@ export default function RunPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const { ask, dialog } = useNoteDialog();
 
+  // Load on open, then poll while the run is queued or running (including after an approval
+  // resumes it or a cancel is requested).
+  const status = run?.id === runId ? run.status : null;
   useEffect(() => {
+    if (status !== null && !isActive(status)) return;
     let live = true;
-    let timer: ReturnType<typeof setTimeout>;
-    const load = async () => {
-      try {
-        const r = await api.get<RunDetail>(`/workflow-runs/${runId}`);
-        if (!live) return;
-        setRun(r);
-        setErr(null);
-        if (isActive(r.status)) timer = setTimeout(load, 1000);
-      } catch (e) {
-        if (live) setErr(errorText(e));
-      }
-    };
-    load();
+    const t = setTimeout(
+      async () => {
+        try {
+          const r = await api.get<RunDetail>(`/workflow-runs/${runId}`);
+          if (live) {
+            setRun(r);
+            setErr(null);
+          }
+        } catch (e) {
+          if (live) setErr(errorText(e));
+        }
+      },
+      status === null ? 0 : 1000,
+    );
     return () => {
       live = false;
-      clearTimeout(timer);
+      clearTimeout(t);
     };
-  }, [runId]);
+  }, [runId, status, run]);
 
   if (err && !run) return <ErrorBox error={err} />;
   if (!run) return <Skeleton className="h-96 w-full rounded-[var(--radius-lg)]" />;
@@ -371,7 +376,7 @@ function StepDetail({ runId, step }: { runId: string; step: StepRun }) {
   }
 
   return (
-    <Panel className="min-w-0">
+    <Panel className="min-w-0 self-start">
       <div className="border-b border-line px-4 py-3">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-md font-semibold text-ink">{step.label}</h2>
