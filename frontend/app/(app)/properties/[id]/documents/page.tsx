@@ -106,15 +106,10 @@ export default function DocumentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">
-          Documents
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-950">
-          Lease intelligence
-        </h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">Documents</p>
+        <h1 className="mt-2 text-2xl font-semibold text-slate-950">Lease intelligence</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Extract proposed terms with page citations. Nothing becomes a
-          calculation input without review.
+          Extract proposed terms with page citations. Nothing becomes a calculation input without review.
         </p>
       </div>
 
@@ -157,11 +152,7 @@ export default function DocumentsPage() {
                 </p>
               </div>
               {!doc.extraction && (
-                <Button
-                  variant="secondary"
-                  onClick={() => analyze(doc.id)}
-                  disabled={busy || doc.processing_status !== "text_extracted"}
-                >
+                <Button variant="secondary" onClick={() => analyze(doc.id)} disabled={busy || doc.processing_status !== "text_extracted"}>
                   Analyze lease
                 </Button>
               )}
@@ -169,9 +160,7 @@ export default function DocumentsPage() {
 
             {doc.extraction && (
               <div className="mt-5 overflow-x-auto">
-                <p className="mb-3 text-sm font-medium">
-                  Review proposed terms
-                </p>
+                <p className="mb-3 text-sm font-medium">Review proposed terms</p>
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b text-xs uppercase text-slate-500">
@@ -184,36 +173,20 @@ export default function DocumentsPage() {
                   <tbody>
                     {doc.extraction.terms.map((term) => (
                       <tr key={term.id} className="border-b align-top">
-                        <td className="px-2 py-3 font-medium">
-                          {term.field_name}
-                        </td>
+                        <td className="px-2 py-3 font-medium">{term.field_name}</td>
                         <td className="max-w-md px-2 py-3">
                           {term.proposed_value || "Not found"}
-                          <div className="mt-1 text-xs text-slate-500">
-                            {term.uncertainty}
-                          </div>
+                          <div className="mt-1 text-xs text-slate-500">{term.uncertainty}</div>
                         </td>
                         <td className="max-w-sm px-2 py-3 text-xs text-slate-600">
-                          p. {term.source_page ?? "—"} ·{" "}
-                          {term.supporting_excerpt || "No citation"}
+                          p. {term.source_page ?? "—"} · {term.supporting_excerpt || "No citation"}
                         </td>
                         <td className="px-2 py-3">
-                          <span className="mr-2 text-xs text-slate-500">
-                            {term.review_status}
-                          </span>
-                          <Button
-                            size="sm"
-                            onClick={() => decide(term.id, "approved")}
-                            disabled={busy}
-                          >
+                          <span className="mr-2 text-xs text-slate-500">{term.review_status}</span>
+                          <Button size="sm" onClick={() => decide(term.id, "approved")} disabled={busy}>
                             Approve
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => decide(term.id, "rejected")}
-                            disabled={busy}
-                          >
+                          <Button size="sm" variant="ghost" onClick={() => decide(term.id, "rejected")} disabled={busy}>
                             Reject
                           </Button>
                         </td>

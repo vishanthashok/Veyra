@@ -18,7 +18,9 @@ def test_empty_term_can_report_not_found_without_source():
 
 def test_extraction_limits_terms_and_conflicts():
     result = LeaseExtractionResult(
-        terms=[LeaseTermProposal(field_name="expense_cap", proposed_value="5%", source_page=12, supporting_excerpt="cap")],
+        terms=[
+            LeaseTermProposal(field_name="expense_cap", proposed_value="5%", source_page=12, supporting_excerpt="cap")
+        ],
         conflicts=["Amendment may supersede section 6"],
     )
     assert result.terms[0].source_page == 12
