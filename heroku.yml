@@ -1,0 +1,8 @@
+# Heroku container build. See docs/DEPLOY_HEROKU.md.
+build:
+  docker:
+    web: Dockerfile
+release:
+  image: web
+  command:
+    - alembic upgrade head

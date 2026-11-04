@@ -1,0 +1,14 @@
+{
+  "name": "Veyra",
+  "description": "CAM pre-close audit and reconciliation readiness. Synthetic demo data only.",
+  "repository": "https://github.com/vishanthashok/Veyra",
+  "stack": "container",
+  "formation": { "web": { "quantity": 1, "size": "eco" } },
+  "addons": [{ "plan": "heroku-postgresql:essential-0" }],
+  "env": {
+    "VEYRA_ENV": { "value": "production" },
+    "VEYRA_COOKIE_SECURE": { "value": "true" },
+    "VEYRA_SECRET_KEY": { "description": "Signs session cookies.", "generator": "secret" },
+    "VEYRA_DEMO_PASSWORD": { "description": "Password for demo@veyra.local after you run the demo seed. Pick your own.", "required": true }
+  }
+}

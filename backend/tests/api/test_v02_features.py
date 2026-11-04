@@ -267,3 +267,13 @@ def test_dashboard_exposes_period_and_open_exception_types(client, demo):
     types = {(t["type"], t["severity"]): t["count"] for t in d["open_exception_types"]}
     assert types[("MISSING_LEASE_RULE", "error")] == 1
     assert d["open_exception_types"][0]["severity"] == "error"
+
+
+def test_platform_database_url_is_normalized(monkeypatch):
+    from app.config import Settings
+
+    monkeypatch.delenv("VEYRA_DATABASE_URL", raising=False)
+    monkeypatch.setenv("DATABASE_URL", "postgres://u:p@db.example:5432/d")
+    assert Settings(_env_file=None).database_url == "postgresql+psycopg://u:p@db.example:5432/d"
+    monkeypatch.setenv("VEYRA_DATABASE_URL", "postgresql://a:b@h/x")
+    assert Settings(_env_file=None).database_url == "postgresql+psycopg://a:b@h/x"
